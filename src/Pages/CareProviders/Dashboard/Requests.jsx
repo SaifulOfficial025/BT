@@ -186,7 +186,7 @@ function PendingRequestCard({ req }) {
           </div>
         )}
       </div>
-      <div className="text-xs text-gray-400 mb-1">{req.posted}</div>
+      <div className="text-xs text-gray-400 mb-1">{req.posted} </div>
       <div className="font-medium text-gray-800 mb-1">{req.title}</div>
       <div className="text-sm text-gray-600">{req.desc}</div>
     </div>

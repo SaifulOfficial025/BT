@@ -7,13 +7,14 @@ import { MdMessage } from "react-icons/md";
 import { MdOutlineSettings } from "react-icons/md";
 import Triangle from "../../../../public/triangle.svg"
 import Message from "../../../../public/receipt-text.svg"
+import { IoPeopleCircle } from "react-icons/io5";
 
 
 const navItems = [
   { label: "Home", icon: <PiSquaresFour className="h-6 w-6" /> },
   { label: "Requests", icon: <img src={Triangle} alt="Triangle Icon" className="h-6 w-6" /> },
   { label: "Message", icon: <img src={Message} alt="Message Icon" className="h-6 w-6" /> },
-  { label: "Care Providers", icon: <PiSquaresFour className="h-6 w-6" /> },
+  { label: "Care Providers", icon: <IoPeopleCircle  className="h-6 w-6" /> },
   { label: "Setting", icon: <MdOutlineSettings className="h-6 w-6" /> },
 ];
 

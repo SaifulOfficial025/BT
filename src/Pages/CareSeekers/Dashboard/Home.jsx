@@ -6,51 +6,75 @@ import { HiOutlineUserGroup } from "react-icons/hi2";
 import { HiOutlineUserPlus } from "react-icons/hi2";
 import { BsThreeDots } from "react-icons/bs";
 import Sidebar from "./Sidebar";
+import pattern from "../../../../public/pattern.svg";
+import folder from "../../../../public/folder.svg";
+import calender from "../../../../public/calender.svg";
+import provider from "../../../../public/provider.png";
+
+
+
 
 function Home() {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen ">
       <Sidebar active="Home" />
-      <div className="flex-1 bg-[#f5f8fb] px-6 py-5 font-sfpro ml-64">
+      <div className="flex-1 bg-white px-6 py-5 font-sfpro ml-64">
       {/* Ensure sidebar highlights Home when this component is used inside dashboard layout */}
       {/* Header */}
-      <h1 className="text-[#0a0a0a] text-[17px] font-semibold mb-4">Homepage</h1>
+      <div className="border-b border-gray-200 mb-4">
+      <span className="text-[#0a0a0a]   mb-4  text-2xl">Homepage</span>
+      </div>
 
       {/* Greeting */}
       <div className="flex items-center space-x-2 mb-4">
-        <FaCheckCircle className="text-[#00b894] text-sm" />
-        <p className="text-[#00b894] text-[15px]">
+        <FaCheckCircle className="text-[#00b894] text-lg" />
+        <p className="text-black text-2xl">
+
           Hello, <span className="font-semibold">Mark!</span>
         </p>
       </div>
 
-      {/* Care Provider Request & Spending Card */}
-      <div className="bg-[#dff0f9] bg-opacity-40 rounded-xl p-5 relative overflow-hidden">
-        <div className="flex justify-between items-center">
-          <div className="text-[#0093d1]">
-            <div className="text-[32px] font-semibold leading-none">7</div>
-            <p className="text-[13px] mt-1">New Care Providers request</p>
-          </div>
-          <div className="text-right">
-            <div className="text-[#0093d1] text-[26px] font-semibold leading-none">
-              ₦0.00
-            </div>
-            <p className="text-[13px] mt-1 text-[#333] opacity-60">
-              Total Amount Spent
-            </p>
-          </div>
-        </div>
-        <button className="w-full mt-4 bg-[#0093d1] text-white rounded-md py-[9px] text-[15px] font-medium">
-          View Details
-        </button>
+{/* Care Provider Request & Spending Card */}
+<div
+  className="bg-[#dff0f9] bg-opacity-40 rounded-xl p-6 relative overflow-hidden z-0"
+  style={{
+    backgroundImage: `url(${pattern})`,
+    backgroundSize: 'auto 100%',
+  }}
+>
+  <div className="flex items-center">
+    {/* Left: New Requests */}
+    <div className="text-[#0093d1] w-1/2">
+      <div className="text-[40px] font-semibold leading-none">7</div>
+      <p className="text-[13px] mt-1">New Care Providers request</p>
+    </div>
+
+    {/* Divider
+    <div className="w-px h-20 bg-[#cbd5e1] mx-6" /> */}
+
+    {/* Right: Amount Spent */}
+    <div className="flex-1 text-right">
+      <div className="flex items-center justify-end text-[#0093d1] text-[28px] font-semibold leading-none">
+        <img src="/NiCurrency.svg" alt="Naira" className="w-7 h-7 mr-2" />
+        <span>0.00</span>
       </div>
+      <p className="text-[13px] mt-1 text-[#0093d1]">Total Amount Spent</p>
+    </div>
+  </div>
+
+  <button className="w-full mt-5 bg-[#0093d1] text-white rounded-md py-3 text-[15px] font-medium">
+    View Details
+  </button>
+</div>
+
+
 
       {/* Verify Identity */}
       <div className="bg-white rounded-xl p-4 mt-5 flex items-center justify-between border border-gray-100 shadow-sm">
         <div className="flex items-center space-x-3">
-          <FaFolderOpen className="text-[#0093d1] text-3xl" />
+          <img src={folder} alt="Folder Icon" className="h-15 w-15" />
           <div>
-            <h3 className="text-[15px] font-medium text-gray-800">
+            <h3 className="text-2xl font-medium text-gray-800">
               Verify Your Identity
             </h3>
             <p className="text-[13px] text-gray-500">
@@ -64,61 +88,77 @@ function Home() {
       </div>
 
       {/* What would you like to do */}
-      <h2 className="mt-8 mb-3 text-[15px] font-medium text-gray-800">
-        What would you like to do today
-      </h2>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl p-4 flex items-start space-x-3 shadow-sm border border-gray-100">
-          <div className="bg-[#ecf7fe] p-2 rounded-md">
-            <HiOutlineUserGroup className="text-[#0093d1] text-2xl" />
-          </div>
-          <div>
-            <h4 className="text-[15px] font-medium text-gray-800 mb-[2px]">
-              Book a Service
-            </h4>
-            <p className="text-[13px] text-gray-500 leading-snug">
-              Find Your Perfect Care provider
-            </p>
-          </div>
-        </div>
-        <div className="bg-[#f2faf8] rounded-xl p-4 flex items-start space-x-3 shadow-sm border border-gray-100">
-          <div className="bg-white p-2 rounded-md">
-            <HiOutlineUserPlus className="text-[#0093d1] text-2xl" />
-          </div>
-          <div>
-            <h4 className="text-[15px] font-medium text-gray-800 mb-[2px]">
-              Become a Care provider
-            </h4>
-            <p className="text-[13px] text-gray-500 leading-snug">
-              Apply to Care for Families
-            </p>
-          </div>
-        </div>
-      </div>
+<h2 className="mt-8 mb-3 text-[15px] font-medium text-gray-800">
+  What would you like to do today
+</h2>
+
+<div className="grid grid-cols-2 gap-4">
+  {/* Book a Service Card */}
+  <div className="bg-[#f3f9fc] rounded-xl px-4 py-10 flex items-center space-x-3 shadow-sm border border-gray-100">
+    <div className="p-2 rounded-md flex-shrink-0">
+      <img src={calender} alt="Calendar Icon"className="h-15 w-15" />
+    </div>
+    <div>
+      <h4 className="text-2xl font-medium text-gray-800 mb-[2px]">
+        Book a Service
+      </h4>
+      <p className="text-[13px] text-gray-500 leading-snug">
+        Find Your Perfect Care provider
+      </p>
+    </div>
+  </div>
+
+  {/* Become a Care Provider Card */}
+  <div className="bg-[#f2faf8] rounded-xl px-4 py-10 flex items-center space-x-3 shadow-sm border border-gray-100">
+    <div className="p-2 rounded-md flex-shrink-0">
+      <img src={provider} alt="Provider Icon" className="h-15 w-15" />
+    </div>
+    <div>
+      <h4 className="text-2xl font-medium text-gray-800 mb-[2px]">
+        Become a Care provider
+      </h4>
+      <p className="text-[13px] text-gray-500 leading-snug">
+        Apply to Care for Families
+      </p>
+    </div>
+  </div>
+</div>
+
 
       {/* Appointment */}
       <h2 className="mt-8 mb-3 text-[15px] font-medium text-gray-800">
         What would you like to do today
       </h2>
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-        <div className="flex border-b border-gray-100">
-          <div className="w-16 flex flex-col items-center justify-center py-4 border-r border-gray-100">
-            <p className="text-[13px] text-gray-500">Wed</p>
-            <h3 className="text-[17px] font-bold text-[#0093d1]">12</h3>
-          </div>
-          <div className="flex-1 px-4 py-4">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-[14px] text-gray-700 font-medium">
-                Child care with Aleem Sarah
-              </p>
-              <BsThreeDots className="text-gray-400" />
-            </div>
-            <p className="text-[13px] text-gray-500">
-              06:45 AM - 13:00 PM
-            </p>
-          </div>
-        </div>
-      </div>
+
+
+      <div className="bg-[#f5f5f5] rounded-md flex items-center overflow-hidden py-3">
+  {/* Date Column */}
+  <div className="w-14 flex flex-col items-center justify-center py-3 border-r-[5px] border-[#0d99c9] rounded-l-lg">
+
+
+    <p className="text-xs text-gray-500">Wed</p>
+    <p className="text-base font-semibold text-gray-700">12</p>
+  </div>
+
+  {/* Vertical Blue Line */}
+  <div className="w-[2px] h-full bg-[#0093d1]" />
+
+  {/* Content */}
+  <div className="flex items-center px-4 py-3 space-x-3 flex-1">
+    <img
+      src="https://randomuser.me/api/portraits/women/1.jpg"
+      alt="Avatar"
+      className="w-8 h-8 rounded-full object-cover"
+    />
+    <div className="flex flex-col">
+      <p className="text-lg font-medium text-gray-800 leading-tight">
+        Child care with Aleem Sarah
+      </p>
+      <p className="text-sm text-gray-500">06:45 AM - 13:00 PM</p>
+    </div>
+  </div>
+</div>
+
       </div>
     </div>
   );
