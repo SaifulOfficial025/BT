@@ -202,7 +202,7 @@ function CareProvidersNearYou() {
                       setSelectedPlan("Free");
                       setShowSubscribePopup(false);
                       localStorage.setItem("careProviderPlan", "Free");
-                      window.location.href = "/careseekers/dashboard/";
+                      window.location.href = "/careseekers/dashboard/careproviders";
                     }}
                 >
                 <div className="text-lg font-bold text-gray-800 mb-1">Free</div>
@@ -292,7 +292,7 @@ function CareProvidersNearYou() {
                 <span>${paymentDetails[selectedPlan]?.total ?? 416}.00</span>
               </div>
             </div>
-            <Link to="/careseekers/dashboard/">
+            <Link to="/careseekers/dashboard/careproviders">
             <button className="w-full bg-[#0093d1] text-white py-3 px-20 rounded-lg font-semibold text-lg mb-3 hover:bg-[#007bb0] transition">
               Proceed to Payment
             </button>

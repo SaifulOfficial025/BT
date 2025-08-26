@@ -19,6 +19,7 @@ import Password from "../Pages/CareSeekers/Dashboard/Password";
 import MessageDetails from "../Pages/CareSeekers/Dashboard/MessageDetails";
 import RequestDetails from "../Pages/CareSeekers/Dashboard/RequestDetails";
 import PersonalInformationProvider from "../Pages/CareProviders/Dashboard/PersonalInformation";
+import DashboardHome from "../Pages/CareSeekers/Dashboard/Home";
 
 
 
@@ -58,6 +59,10 @@ export const router = createBrowserRouter([
     path: "/careseekers/dashboard/password",
     element: <Password />,
   },
+  {
+    path: "/careseekers/dashboard/home",
+    element: <DashboardHome />,
+  },
 
 
 
@@ -84,7 +89,7 @@ export const router = createBrowserRouter([
     element: <CareProviderSignupPage />,
   },
   {
-    path: "/careseekers/dashboard",
+    path: "/careseekers/dashboard/careproviders",
     element: <CareProvidersNearYouDashboard />,
   },
   {

@@ -111,7 +111,7 @@ function LoginPage(handleBack) {
           </div>
 
           {/* Login Button */}
-          <Link to="/careseekers/dashboard/">
+          <Link to="/careseekers/dashboard/home">
           <button
             type="submit"
             className="font-sfpro w-full bg-[#0093d1] text-white font-medium py-2 rounded-md hover:bg-[#007bb0] transition"

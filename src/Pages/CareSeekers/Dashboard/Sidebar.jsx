@@ -13,6 +13,7 @@ const navItems = [
   { label: "Home", icon: <PiSquaresFour className="h-6 w-6" /> },
   { label: "Requests", icon: <img src={Triangle} alt="Triangle Icon" className="h-6 w-6" /> },
   { label: "Message", icon: <img src={Message} alt="Message Icon" className="h-6 w-6" /> },
+  { label: "Care Providers", icon: <PiSquaresFour className="h-6 w-6" /> },
   { label: "Setting", icon: <MdOutlineSettings className="h-6 w-6" /> },
 ];
 
@@ -22,8 +23,10 @@ function Sidebar({ active = "Home", onNav }) {
     if (onNav) {
       onNav(label);
     }
-    if (label === "Home") {
-      navigate("/careseekers/dashboard");
+    if (label === "Care Providers") {
+      navigate("/careseekers/dashboard/careproviders");
+    } else if (label === "Home") {
+      navigate("/careseekers/dashboard/home");
     } else if (label === "Requests") {
       navigate("/careseekers/dashboard/requests");
     } else if (label === "Message") {

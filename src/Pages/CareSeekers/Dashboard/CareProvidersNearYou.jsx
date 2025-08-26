@@ -25,7 +25,7 @@ function CareProvidersNearYou() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar active="Home" />
+  <Sidebar active="Care Providers" />
       <div className="flex-1 font-sfpro px-8 py-8 ml-64">
         
 
@@ -38,7 +38,7 @@ function CareProvidersNearYou() {
           {/* Header */}
           <div className="flex justify-between items-center px-8 pt-8">
             <h2 className="text-3xl font-semibold text-gray-800">
-              Care Providers near you
+              Care Providers near you 
             </h2>
             {/* <div className="flex items-center">
               <span className="text-lg text-[#0093d1] font-bold">Step 8</span>
