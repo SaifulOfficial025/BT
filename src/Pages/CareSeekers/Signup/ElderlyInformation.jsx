@@ -1,6 +1,6 @@
 import React from "react";
 
-function ElderlyInformation({ formData, updateFormData, handleNext, handleBack, showLocationPopup, setShowLocationPopup }) {
+function ElderlyInformation({ formData, updateFormData, handleNext, handleBack, showLocationPopup, setShowLocationPopup, currentStep = 2, totalSteps = 5 }) {
   return (
     <>
       {showLocationPopup && (
@@ -59,7 +59,7 @@ function ElderlyInformation({ formData, updateFormData, handleNext, handleBack, 
             ← 
           </button>
           <h3 className="text-lg text-gray-700 flex-1">Elderly care details</h3>
-          <span className="text-lg text-[#0093d1] font-bold">Step 2</span> <span className="ml-2 text-lg text-gray-500"> of 8</span>
+          <span className="text-lg text-[#0093d1] font-bold">Step {currentStep}</span> <span className="ml-2 text-lg text-gray-500"> of {totalSteps}</span>
         </div>
         <div className="mb-6">
           <h4 className="text-base font-medium text-gray-800 mb-2">Details</h4>

@@ -1,6 +1,6 @@
 import React from "react";
 
-function TutoringSummary({ formData, updateFormData, handleNext, handleBack }) {
+function TutoringSummary({ formData, updateFormData, handleNext, handleBack, currentStep = 7, totalSteps = 8 }) {
   return (
     <div className="w-full max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
       <div className="flex items-center mb-6">
@@ -8,7 +8,7 @@ function TutoringSummary({ formData, updateFormData, handleNext, handleBack }) {
           ← 
         </button>
         <h3 className="text-lg text-gray-700 flex-1">Summary</h3>
-        <span className="text-lg text-[#0093d1] font-bold">Step 7</span> <span className="ml-2 text-lg text-gray-500"> of 8</span>
+  <span className="text-lg text-[#0093d1] font-bold">Step {currentStep}</span> <span className="ml-2 text-lg text-gray-500"> of {totalSteps}</span>
       </div>
       <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
         <div className="flex items-start">

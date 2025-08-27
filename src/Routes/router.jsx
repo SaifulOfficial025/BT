@@ -1,13 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
 import Home from "../Pages/Home/Home";
 
-
-
-
-import CareSeekerLoginPage from "../Pages/CareSeekers/LoginPage"; 
+import CareSeekerLoginPage from "../Pages/CareSeekers/LoginPage";
 import CareSeekerSignupPage from "../Pages/CareSeekers/Signup/Signup";
 import CareProviderLoginPage from "../Pages/CareProviders/LoginPage";
-import CareProviderSignupPage from "../Pages/CareProviders/Signup/Signup"; 
+import CareProviderSignupPage from "../Pages/CareProviders/Signup/Signup";
 import CareProvidersNearYouDashboard from "../Pages/CareSeekers/Dashboard/CareProvidersNearYou";
 import ViewDetails from "../Pages/CareSeekers/Dashboard/ViewDetails";
 import Requests from "../Pages/CareSeekers/Dashboard/Requests";
@@ -21,10 +18,6 @@ import RequestDetails from "../Pages/CareSeekers/Dashboard/RequestDetails";
 import PersonalInformationProvider from "../Pages/CareProviders/Dashboard/PersonalInformation";
 import DashboardHome from "../Pages/CareSeekers/Dashboard/Home";
 
-
-
-
-
 import HomePage from "../Pages/CareProviders/Dashboard/HomePage";
 import JobDetails from "../Pages/CareProviders/Dashboard/JobDetails";
 import MessageProvider from "../Pages/CareProviders/Dashboard/Message";
@@ -35,8 +28,6 @@ import VerifyIdentityProvider from "../Pages/CareProviders/Dashboard/VerifyIdent
 import PasswordProvider from "../Pages/CareProviders/Dashboard/Password";
 import WalletProvider from "../Pages/CareProviders/Dashboard/Wallet";
 import Summary from "../Pages/CareSeekers/Dashboard/Summary";
-
-
 
 export const router = createBrowserRouter([
   {
@@ -64,18 +55,15 @@ export const router = createBrowserRouter([
     element: <DashboardHome />,
   },
 
-
-
-
-
-
-
-
-
   {
     path: "/careseekers/login",
     element: <CareSeekerLoginPage />,
   },
+  {
+    path: "/careseekers",
+    element: <CareSeekerLoginPage />,
+  },
+
   {
     path: "/careseekers/signup",
     element: <CareSeekerSignupPage />,
@@ -116,14 +104,6 @@ export const router = createBrowserRouter([
     path: "/careseekers/dashboard/request_details",
     element: <RequestDetails />,
   },
-
-
-
-
-
-
-
-
 
   {
     path: "/careproviders/dashboard",
@@ -168,6 +148,5 @@ export const router = createBrowserRouter([
   {
     path: "/careseekers/dashboard/summary",
     element: <Summary />,
-  }
-
+  },
 ]);

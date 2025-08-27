@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import SidebarSignup from "./SidebarSignup";
+import SidebarSignup, { getStepsForCategory } from "./SidebarSignup";
 import CareCategory from "./CareCategory";
 import ChildInformation from "./ChildInformation";
 import ElderlyInformation from "./ElderlyInformation";
@@ -174,7 +174,9 @@ function Signup() {
   };
 
   const renderStepContent = () => {
-    // Step 1 is always CareCategory
+  const totalSteps = getStepsForCategory(selectedCategory).length;
+
+  // Step 1 is always CareCategory
     if (currentStep === 1) {
       return (
         <CareCategory 
@@ -182,6 +184,8 @@ function Signup() {
           setSelectedCategory={setSelectedCategory}
           updateFormData={updateFormData}
           handleNext={handleNext}
+          currentStep={currentStep}
+          totalSteps={totalSteps}
         />
       );
     }
@@ -199,6 +203,8 @@ function Signup() {
                 handleBack={handleBack}
                 showLocationPopup={showLocationPopup}
                 setShowLocationPopup={setShowLocationPopup}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 3:
@@ -208,6 +214,8 @@ function Signup() {
                 updateFormData={updateFormData}
                 handleNext={handleNext}
                 handleBack={handleBack}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 4:
@@ -217,6 +225,8 @@ function Signup() {
                 updateFormData={updateFormData}
                 handleNext={handleNext}
                 handleBack={handleBack}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 5:
@@ -226,6 +236,8 @@ function Signup() {
                 updateFormData={updateFormData}
                 handleNext={handleNext}
                 handleBack={handleBack}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 6:
@@ -260,6 +272,8 @@ function Signup() {
                 handleBack={handleBack}
                 showLocationPopup={showLocationPopup}
                 setShowLocationPopup={setShowLocationPopup}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 3:
@@ -269,6 +283,8 @@ function Signup() {
                 updateFormData={updateFormData}
                 handleNext={handleNext}
                 handleBack={handleBack}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 4:
@@ -278,6 +294,8 @@ function Signup() {
                 updateFormData={updateFormData}
                 handleNext={handleNext}
                 handleBack={handleBack}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 5:
@@ -287,6 +305,8 @@ function Signup() {
                 updateFormData={updateFormData}
                 handleNext={handleNext}
                 handleBack={handleBack}
+                  currentStep={currentStep}
+                  totalSteps={totalSteps}
               />
             );
           case 6:
@@ -330,6 +350,8 @@ function Signup() {
                 updateFormData={updateFormData}
                 handleNext={handleNext}
                 handleBack={handleBack}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 4:
@@ -339,6 +361,8 @@ function Signup() {
                 updateFormData={updateFormData}
                 handleNext={handleNext}
                 handleBack={handleBack}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 5:
@@ -373,6 +397,8 @@ function Signup() {
                 handleBack={handleBack}
                 showLocationPopup={showLocationPopup}
                 setShowLocationPopup={setShowLocationPopup}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 3:
@@ -382,6 +408,8 @@ function Signup() {
                 updateFormData={updateFormData}
                 handleNext={handleNext}
                 handleBack={handleBack}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 4:
@@ -391,6 +419,8 @@ function Signup() {
                 updateFormData={updateFormData}
                 handleNext={handleNext}
                 handleBack={handleBack}
+                currentStep={currentStep}
+                totalSteps={totalSteps}
               />
             );
           case 5:
