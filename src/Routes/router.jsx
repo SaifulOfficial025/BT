@@ -28,6 +28,14 @@ import VerifyIdentityProvider from "../Pages/CareProviders/Dashboard/VerifyIdent
 import PasswordProvider from "../Pages/CareProviders/Dashboard/Password";
 import WalletProvider from "../Pages/CareProviders/Dashboard/Wallet";
 import Summary from "../Pages/CareSeekers/Dashboard/Summary";
+import AdminLayout from "../Pages/Admin/AdminLayout";
+import Users from "../Pages/Admin/Users";
+import Activities from "../Pages/Admin/Activities";
+import Earnings from "../Pages/Admin/Earnings";
+import Subscription from "../Pages/Admin/Subscription";
+import Support from "../Pages/Admin/Support";
+import ProfileVerification from "../Pages/Admin/ProfileVerification";
+import MessageAdmin from "../Pages/Admin/Message";
 
 export const router = createBrowserRouter([
   {
@@ -148,5 +156,20 @@ export const router = createBrowserRouter([
   {
     path: "/careseekers/dashboard/summary",
     element: <Summary />,
+  },
+  // Admin routes
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Users /> },
+      { path: "users", element: <Users /> },
+      { path: "activities", element: <Activities /> },
+      { path: "earnings", element: <Earnings /> },
+      { path: "subscription", element: <Subscription /> },
+      { path: "support", element: <Support /> },
+      { path: "profile-verification", element: <ProfileVerification /> },
+      { path: "messages", element: <MessageAdmin /> },
+    ],
   },
 ]);
