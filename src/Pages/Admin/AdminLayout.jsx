@@ -15,6 +15,8 @@ function AdminLayout() {
     'subscription': 'Subscription',
     'support': 'Support',
     'profile-verification': 'Profile Verification',
+    'profile-verification/care-seekers': 'Care Seekers',
+    'profile-verification/care-providers': 'Care Providers',
     'messages': 'Notifications & Messages',
   };
   const pageTitle = titleMap[path] || 'Admin';
@@ -24,7 +26,7 @@ function AdminLayout() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title={pageTitle} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 bg-white">
           <Outlet />
         </main>
       </div>

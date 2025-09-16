@@ -104,7 +104,7 @@ function Users() {
   }
 
   return (
-    <div className="p-6 text-black">
+    <div className="p-6 text-black bg-white">
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {statsConfig.map(s => {

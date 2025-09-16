@@ -94,13 +94,13 @@ function Activities() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'users.csv';
+    a.download = 'activities.csv';
     a.click();
     URL.revokeObjectURL(url);
   }
 
   return (
-    <div className="p-6 text-black">
+    <div className="p-6 text-black bg-white">
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {statsConfig.map(s => {
