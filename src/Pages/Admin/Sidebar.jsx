@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import Carelogo from "../../../public/careLogo.png";
+// Use public/ assets via absolute path at runtime (do not import from public/)
 
 
 import UsersIcon from '../../../public/people.svg?react';
@@ -26,8 +26,8 @@ function Sidebar() {
   return (
     <aside className="h-screen w-56 bg-[#0e2f43] text-white flex flex-col font-sfpro">
       <div className="px-4 py-6 mb-4 flex items-center space-x-2">
-        {/* Placeholder for logo */}
-        <img src={Carelogo} alt="CareNestPro Logo" className="w-8 h-8 " />
+        {/* Placeholder for logo - served from public/ as an absolute path */}
+        <img src="/CareLogo.png" alt="CareNestPro Logo" className="w-8 h-8 " />
         <span className="text-lg ">CareNestPro</span>
       </div>
       <nav className="flex-1">
