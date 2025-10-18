@@ -1,4 +1,4 @@
-export const BASE_URL = 'https://carenestpro.duckdns.org'
+export const BASE_URL = 'https://backend.staging.bristones.com'
 
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('access') || ''

@@ -114,7 +114,7 @@ export const postJob = createAsyncThunk(
         ? { 'Content-Type': 'application/json', Authorization: `Bearer ${access}` }
         : { 'Content-Type': 'application/json' }
 
-      const res = await fetch('https://carenestpro.duckdns.org/api/post/create/', {
+      const res = await fetch('https://backend.staging.bristones.com/api/post/create/', {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)
