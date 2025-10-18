@@ -1,4 +1,3 @@
-import React from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { saveStep, generatePreview, buildPayloadFromSteps } from '../../../Redux/CareSeekerAuth';
 import DualRangeSlider from "./DualRangeSlider";
@@ -158,7 +157,14 @@ function ChildTimeDetails({ formData, updateFormData, handleNext, handleBack, cu
           <div className="bg-green-100 text-green-700 text-sm p-2 rounded mb-4">
             <span className="inline-flex items-center"><span className="mr-1">ℹ️</span> average range in your area is $32 - $55</span>
           </div>
-          <DualRangeSlider />
+          <DualRangeSlider
+            valueStart={formData.hourlyRateStart}
+            valueEnd={formData.hourlyRateEnd}
+            onChange={(v) => {
+              if (v?.hourlyRateStart !== undefined) updateFormData('hourlyRateStart', v.hourlyRateStart)
+              if (v?.hourlyRateEnd !== undefined) updateFormData('hourlyRateEnd', v.hourlyRateEnd)
+            }}
+          />
         </div>
       </div>
 

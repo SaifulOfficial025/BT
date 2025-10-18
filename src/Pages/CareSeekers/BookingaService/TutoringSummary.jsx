@@ -1,10 +1,40 @@
-import React from "react";
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom'
 import { saveStep } from '../../../Redux/CareSeekerAuth';
+import { postJob, buildJobPayload } from '../../../Redux/BookaService'
 
-function TutoringSummary({ formData, updateFormData, handleNext, handleBack, currentStep = 7, totalSteps = 8 }) {
+function TutoringSummary({ formData, updateFormData, handleBack, currentStep = 7, totalSteps = 8 }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate()
   const preview = useSelector((s) => s.careSeeker.preview);
+  const bookaService = useSelector((s) => s.bookaservice || {})
+
+  const handleSubmit = async () => {
+    // Save current form data to localStorage
+    dispatch(saveStep({ 
+      stepName: 'summary', 
+      data: { 
+        messageToProvider: formData.messageToProvider, 
+        acceptedTerms: formData.acceptedTerms 
+      } 
+    }))
+
+    // Build payload and submit
+    const payload = buildJobPayload(formData)
+    
+    try {
+      const result = await dispatch(postJob(payload))
+      if (postJob.fulfilled.match(result)) {
+        // Success - redirect to dashboard
+        navigate('/careseekers/dashboard/home')
+      } else {
+        // Error - show alert
+        alert('Failed to submit: ' + JSON.stringify(result.payload || result.error))
+      }
+    } catch (error) {
+      alert('Unexpected error: ' + error.message)
+    }
+  }
   return (
     <div className="w-full max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
       <div className="flex items-center mb-6">
@@ -50,21 +80,17 @@ function TutoringSummary({ formData, updateFormData, handleNext, handleBack, cur
         />
         <label htmlFor="terms" className="text-sm text-gray-700">
           I acknowledge that I have read and accepted{' '}
-          <a href="#" className="text-[#0093d1] underline">CareNestPro's Terms of Use</a>,{' '}
+          <a href="#" className="text-[#0093d1] underline">CareNestPro&apos;s Terms of Use</a>,{' '}
           <a href="#" className="text-[#0093d1] underline">Agreement</a> and{' '}
           <a href="#" className="text-[#0093d1] underline">Privacy policy</a>.
         </label>
       </div>
       <button 
-        onClick={() => {
-          // Save message and acceptedTerms into redux/localStorage before moving on
-          dispatch(saveStep({ stepName: 'summary', data: { messageToProvider: formData.messageToProvider, acceptedTerms: formData.acceptedTerms } }));
-          handleNext();
-        }}
+        onClick={handleSubmit}
         className="w-full bg-[#0093d1] text-white text-lg font-medium py-3 rounded-md hover:bg-[#007bb0] transition"
-        disabled={!formData.acceptedTerms}
+        disabled={!formData.acceptedTerms || bookaService.loading}
       >
-        Next
+        {bookaService.loading ? 'Submitting...' : 'Submit'}
       </button>
     </div>
   );

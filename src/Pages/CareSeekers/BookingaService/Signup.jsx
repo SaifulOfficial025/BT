@@ -1,4 +1,82 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useDispatch } from 'react-redux'
+import { postJob } from '../../../Redux/BookaService'
+
+function PublishButton({ formData = {} }) {
+  const dispatch = useDispatch()
+  const handlePublish = async () => {
+    // Build payload from formData (basic mapping)
+    const job_data = {
+      service_category: (formData.careCategory || 'childcare').toLowerCase(),
+      details: {
+        location_information: {
+          use_current_location: formData.useCurrentLocation || false,
+          preferred_language: formData.preferredLanguage || 'English',
+          country: formData.country || '',
+          state: formData.state || '',
+          city: formData.city || '',
+          zip_code: formData.zipCode || '',
+          nationality: formData.nationality || ''
+        }
+      },
+      schedule: {
+        job_type: (formData.scheduleType || 'Reoccurring').toLowerCase(),
+        recurrence_pattern: {
+          frequency: (formData.repeatFrequency || 'Weekly').toLowerCase(),
+          days: formData.repeatDays || []
+        }
+      },
+      budget: {
+        price_min: parseFloat(formData.hourlyRateStart) || 25.0,
+        price_max: parseFloat(formData.hourlyRateEnd) || 35.0
+      },
+      message_to_provider: formData.messageToProvider || ''
+    }
+
+    // Service-specific: housekeeping example
+    if ((formData.housekeepingServices || []).length) {
+      job_data.details.housekeeping_information = {
+        kind_of_housekeeping: formData.housekeepingServices || [],
+        size_of_your_house: formData.homeSize || '',
+        number_of_bedrooms: formData.number_of_bedrooms || '',
+        number_of_bathrooms: formData.number_of_bathrooms || '',
+        number_of_toilets: formData.number_of_toilets || '',
+        pets_present: formData.pets_present || 'No',
+        specify_pet_present: formData.specify_pet_present || '',
+        additional_care: formData.additionalCare || []
+      }
+    }
+
+    const payload = {
+      job_data,
+      title: formData.previewTitle || '',
+      summary: formData.previewSummary || '',
+      skills_and_expertise: formData.skills || []
+    }
+
+    try {
+      const resAction = await dispatch(postJob(payload))
+      if (resAction.error) {
+        alert('Publish failed: ' + JSON.stringify(resAction.payload || resAction.error))
+      } else {
+        alert('Success: ' + JSON.stringify(resAction.payload))
+      }
+    } catch (e) {
+      alert('Unexpected error: ' + e.message)
+    }
+  }
+
+  return (
+    <div className="flex justify-end">
+      <button
+        onClick={handlePublish}
+        className="bg-[#0093d1] text-white py-2 px-6 rounded-md font-semibold hover:bg-[#007bb0]"
+      >
+        Publish
+      </button>
+    </div>
+  )
+}
 import SidebarSignup, { getStepsForCategory } from "./SidebarSignup";
 import CareCategory from "./CareCategory";
 import ChildInformation from "./ChildInformation";
@@ -16,16 +94,12 @@ import ElderlySummary from "./ElderlySummary";
 import TutoringSummary from "./TutoringSummary";
 import HousekeepingSummary from "./HousekeepingSummary";
 import CareProvidersNearYou from "./CareProvidersNearYou";
-import EmailStep from "./EmailStep";
-import PasswordStep from "./PasswordStep";
+// Email/password steps removed for BookingaService flow
 
 function Signup() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [showEmailPopup, setShowEmailPopup] = useState(false);
-  const [showPasswordPopup, setShowPasswordPopup] = useState(false);
-  const [isEmailComplete, setIsEmailComplete] = useState(false);
-  const [isPasswordComplete, setIsPasswordComplete] = useState(false);
+  // Email/password steps removed for BookingaService flow
   const [showLocationPopup, setShowLocationPopup] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -116,8 +190,8 @@ function Signup() {
           case 1: return 2; // CareCategory → ChildInformation
           case 2: return 3; // ChildInformation → ChildCareProviderExperience
           case 3: return 4; // ChildCareProviderExperience → ChildTimeDetails
-          case 4: return 5; // ChildTimeDetails → ChildSummary
-          case 5: return 6; // ChildSummary → CareProvidersNearYou
+          case 4: return 5; // ChildTimeDetails → ChildSummary (final)
+          case 5: return null; // Summary is final
           default: return null;
         }
       case "Elderly Care":
@@ -125,24 +199,24 @@ function Signup() {
           case 1: return 2; // CareCategory → ElderlyInformation
           case 2: return 3; // ElderlyInformation → ElderlyCareProviderExperience
           case 3: return 4; // ElderlyCareProviderExperience → ElderlyTimeDetails
-          case 4: return 5; // ElderlyTimeDetails → ElderlySummary
-          case 5: return 6; // ElderlySummary → CareProvidersNearYou
+          case 4: return 5; // ElderlyTimeDetails → ElderlySummary (final)
+          case 5: return null; // Summary is final
           default: return null;
         }
       case "Tutoring":
         switch (currentStep) {
           case 1: return 2; // CareCategory → TutoringInformation
           case 2: return 3; // TutoringInformation → TutoringTimeDetails
-          case 3: return 4; // TutoringTimeDetails → TutoringSummary
-          case 4: return 5; // TutoringSummary → CareProvidersNearYou
+          case 3: return 4; // TutoringTimeDetails → TutoringSummary (final)
+          case 4: return null; // Summary is final
           default: return null;
         }
       case "Housekeeping":
         switch (currentStep) {
           case 1: return 2; // CareCategory → HousekeeperInformation
           case 2: return 3; // HousekeeperInformation → HouseKeepingTimeDetails
-          case 3: return 4; // HouseKeepingTimeDetails → HousekeepingSummary
-          case 4: return 5; // HousekeepingSummary → CareProvidersNearYou
+          case 3: return 4; // HouseKeepingTimeDetails → HousekeepingSummary (final)
+          case 4: return null; // Summary is final
           default: return null;
         }
       default:
@@ -155,23 +229,7 @@ function Signup() {
     return currentStep > 1 ? currentStep - 1 : null;
   };
 
-  const handleEmailComplete = () => {
-    setIsEmailComplete(true);
-    setShowEmailPopup(false);
-  };
-
-  const handlePasswordComplete = () => {
-    setIsPasswordComplete(true);
-    setShowPasswordPopup(false);
-  };
-
-  const handleEmailPopupClose = () => {
-    setShowEmailPopup(false);
-  };
-
-  const handlePasswordPopupClose = () => {
-    setShowPasswordPopup(false);
-  };
+  // Email/password popup handlers removed
 
   const renderStepContent = () => {
   const totalSteps = getStepsForCategory(selectedCategory).length;
@@ -244,10 +302,6 @@ function Signup() {
             return (
               <CareProvidersNearYou
                 formData={formData}
-                isEmailComplete={isEmailComplete}
-                isPasswordComplete={isPasswordComplete}
-                onShowEmailPopup={() => setShowEmailPopup(true)}
-                onShowPasswordPopup={() => setShowPasswordPopup(true)}
               />
             );
           default:
@@ -313,10 +367,6 @@ function Signup() {
             return (
               <CareProvidersNearYou
                 formData={formData}
-                isEmailComplete={isEmailComplete}
-                isPasswordComplete={isPasswordComplete}
-                onShowEmailPopup={() => setShowEmailPopup(true)}
-                onShowPasswordPopup={() => setShowPasswordPopup(true)}
               />
             );
           default:
@@ -369,10 +419,6 @@ function Signup() {
             return (
               <CareProvidersNearYou
                 formData={formData}
-                isEmailComplete={isEmailComplete}
-                isPasswordComplete={isPasswordComplete}
-                onShowEmailPopup={() => setShowEmailPopup(true)}
-                onShowPasswordPopup={() => setShowPasswordPopup(true)}
               />
             );
           default:
@@ -427,10 +473,6 @@ function Signup() {
             return (
               <CareProvidersNearYou
                 formData={formData}
-                isEmailComplete={isEmailComplete}
-                isPasswordComplete={isPasswordComplete}
-                onShowEmailPopup={() => setShowEmailPopup(true)}
-                onShowPasswordPopup={() => setShowPasswordPopup(true)}
               />
             );
           default:
@@ -472,41 +514,20 @@ function Signup() {
       >
         <div className="w-full flex flex-col items-center justify-center py-12 px-8">
           <h2 className="text-4xl font-semibold text-gray-800 mb-8 text-center font-sfpro">
-            Create an account
+            Booking a service
           </h2>
           <div className="w-full flex justify-center">
             {renderStepContent()}
           </div>
+          {/* Publish button shown on final step (Summary) */}
+          {currentStep === getStepsForCategory(selectedCategory).length && (
+            <div className="w-full max-w-4xl mx-auto mt-6">
+              <PublishButton formData={formData} />
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Email Popup */}
-      {showEmailPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-xl w-[400px] max-w-full p-8">
-            <EmailStep
-              formData={formData}
-              updateFormData={updateFormData}
-              onClose={handleEmailPopupClose}
-              onComplete={handleEmailComplete}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Password Popup */}
-      {showPasswordPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-xl w-[400px] max-w-full p-8">
-            <PasswordStep
-              formData={formData}
-              updateFormData={updateFormData}
-              onClose={handlePasswordPopupClose}
-              onComplete={handlePasswordComplete}
-            />
-          </div>
-        </div>
-      )}
+      {/* Email/password popups removed for BookingaService flow */}
     </div>
   );
 }

@@ -41,7 +41,7 @@ import ProfileVerificationSeeker from "../Pages/Admin/ProfileVerificationSeeker"
 import ProfileVerificationProvider from "../Pages/Admin/ProfileVerificationProvider";
 import MessageAdmin from "../Pages/Admin/Message";
 
-import BookingService from "../Pages/CareSeekers/BookingaService/CareCategory";
+import BookingService from "../Pages/CareSeekers/BookingaService/Signup";
 
 export const router = createBrowserRouter([
   {

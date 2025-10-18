@@ -125,10 +125,10 @@ function PendingDetails() {
           ) : (
             <div className="flex flex-col gap-3">
               <label className="block text-sm font-medium text-gray-700">Summary</label>
-              <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={5} className="w-full mt-2 p-3 border border-gray-200 rounded-md text-sm" />
+              <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={5} className="w-full mt-2 p-3 border border-gray-200 rounded-md text-sm dark:bg-white dark:text-black" />
 
               <label className="block text-sm font-medium text-gray-700 mt-2">Skills and expertise (comma separated)</label>
-              <input value={skillsInput} onChange={(e) => setSkillsInput(e.target.value)} className="w-full mt-2 p-2 border border-gray-200 rounded-md text-sm" />
+              <input value={skillsInput} onChange={(e) => setSkillsInput(e.target.value)} className="w-full mt-2 p-2 border border-gray-200 rounded-md text-sm dark:bg-white dark:text-black" />
 
               <div className="flex gap-3">
                 <button

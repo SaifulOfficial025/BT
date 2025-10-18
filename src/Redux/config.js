@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://10.10.13.75:8088'
+export const BASE_URL = 'https://carenestpro.duckdns.org'
 
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('access') || ''

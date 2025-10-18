@@ -73,7 +73,7 @@ function RequestDetails() {
         <div className="mb-8">
           <div className="text-gray-700 font-medium mb-2">Message to Care Provider</div>
           <textarea
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-800 min-h-[100px] resize-none mb-2"
+            className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-800 min-h-[100px] resize-none mb-2 dark:bg-white dark:text-black"
             placeholder="Input feedback of your time with care provider"
             value={feedback}
             onChange={e => setFeedback(e.target.value)}

@@ -1,8 +1,8 @@
 import React from "react";
 import Girl from "../../../../public/girl.svg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux'
-import { registerAndPublish, saveStep } from '../../../Redux/CareSeekerAuth'
+import { registerAndPublish, saveStep, buildRegisterAndPublishPayload } from '../../../Redux/CareSeekerAuth'
 
 
 function CareProvidersNearYou() {
@@ -12,12 +12,15 @@ function CareProvidersNearYou() {
 
   const [showSignupPopup, setShowSignupPopup] = React.useState(true);
   const [signupForm, setSignupForm] = React.useState({
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
   const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   const readOnboarding = () => {
     try {
@@ -27,81 +30,33 @@ function CareProvidersNearYou() {
   }
 
   const handleRegister = async () => {
-    if (!signupForm.email || !signupForm.password || signupForm.password !== signupForm.confirmPassword) {
-      alert('Please provide a valid email and matching passwords')
+    if (!signupForm.email || !signupForm.password || signupForm.password !== signupForm.confirmPassword || !signupForm.firstName || !signupForm.lastName) {
+      alert('Please provide first name, last name, valid email and matching passwords')
       return
     }
 
     const onboarding = readOnboarding()
-
-    // Build the complete job_data payload from all collected steps
-    const job_data = {
-      service_category: (onboarding.steps?.careCategory || "childcare").toLowerCase(),
-      details: {
-        location_information: {
-          use_current_location: onboarding.steps?.location?.useCurrentLocation || false,
-          preferred_language: onboarding.steps?.location?.preferredLanguage || "Select language",
-          country: onboarding.steps?.location?.country || "Select country",
-          state: onboarding.steps?.location?.state || "Select state", 
-          city: onboarding.steps?.location?.city || "Input city",
-          zip_code: onboarding.steps?.location?.zipCode || "Input zip code",
-          nationality: onboarding.steps?.location?.nationality || "Input nationality"
-        }
-      },
-      job_type: onboarding.steps?.timeDetails?.scheduleType?.toLowerCase() === 'one-off' ? 'one-time' : 'recurring',
-      start_date: onboarding.steps?.timeDetails?.startDate || "2025-11-10",
-      end_date: onboarding.steps?.timeDetails?.endDate || "2026-02-10",
-      start_time: onboarding.steps?.timeDetails?.startTime || "09:00:00",
-      end_time: onboarding.steps?.timeDetails?.endTime || "17:00:00",
-      recurrence_pattern: {
-        frequency: (onboarding.steps?.timeDetails?.repeatFrequency || "Weekly").toLowerCase(),
-        days: onboarding.steps?.timeDetails?.repeatDays || ["Monday", "Wednesday", "Friday"]
-      },
-      price_min: onboarding.steps?.timeDetails?.priceMin || "35.00",
-      price_max: onboarding.steps?.timeDetails?.priceMax || "55.00",
-      message_to_provider: onboarding.steps?.summary?.messageToProvider || "We need someone reliable."
+    
+    const userCredentials = {
+      firstName: signupForm.firstName,
+      lastName: signupForm.lastName,
+      email: signupForm.email,
+      password: signupForm.password
     }
 
-    // Add service-specific details based on category
-    if (onboarding.steps?.careCategory === 'Childcare') {
-      job_data.details.child_information = {
-        care_type: onboarding.steps?.childInfo?.childcareType || "Nanny",
-        number_of_children: onboarding.steps?.childInfo?.numberOfChildren || "1 child",
-        children: (onboarding.steps?.childInfo?.childrenDetails || []).map(child => ({
-          age: parseInt(child.age) || 15,
-          gender: child.gender || "Male"
-        }))
-      }
-      job_data.details.provider_experience = {
-        languages: onboarding.steps?.experience?.communicationLanguage || ["English"],
-        special_preferences: onboarding.steps?.experience?.specialPreferences || [],
-        preferred_option: (onboarding.steps?.experience?.preferredOption || ["Live-Out"])[0] || "Live-Out"
-      }
-    }
-
-    const payload = {
-      user_data: {
-        full_name: signupForm.full_name || '',
-        email: signupForm.email,
-        password: signupForm.password,
-        password2: signupForm.confirmPassword,
-        user_type: 'seeker'
-      },
-      job_data: job_data,
-      title: onboarding.preview?.title || '',
-      summary: onboarding.preview?.summary || ''
-    }
+    const payload = buildRegisterAndPublishPayload(onboarding.steps, userCredentials)
 
     try {
       const resAction = await dispatch(registerAndPublish(payload))
       if (resAction.error) {
         alert('Registration failed: ' + (resAction.payload || resAction.error.message))
       } else {
-        alert('Success: ' + JSON.stringify(resAction.payload))
+        // Save registration result and redirect to login
         dispatch(saveStep({ stepName: 'registered', data: resAction.payload }))
         setShowPaymentPopup(false)
         setShowSubscribePopup(false)
         setShowSignupPopup(false)
+        navigate('/careseekers/login')
       }
     } catch (e) {
       alert('Unexpected error: ' + e.message)
@@ -129,8 +84,28 @@ function CareProvidersNearYou() {
               Sign Up to View Care Providers near you  
             </h2>
             <p className="text-sm text-gray-500 text-center mb-6">
-              Kindly enter your email address below to view care providers near you. 
+              Kindly enter your details below to view care providers near you. 
             </p>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <input
+                type="text"
+                placeholder="First Name"
+                value={signupForm.firstName}
+                onChange={(e) =>
+                  setSignupForm({ ...signupForm, firstName: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400"
+              />
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={signupForm.lastName}
+                onChange={(e) =>
+                  setSignupForm({ ...signupForm, lastName: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400"
+              />
+            </div>
             <input
               type="email"
               placeholder="Email"

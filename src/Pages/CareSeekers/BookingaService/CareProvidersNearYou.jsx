@@ -2,7 +2,8 @@ import React from "react";
 import Girl from "../../../../public/girl.svg";
 import { Link } from "react-router-dom";
 import { useDispatch } from 'react-redux'
-import { registerAndPublish, saveStep } from '../../../Redux/CareSeekerAuth'
+import { saveStep } from '../../../Redux/CareSeekerAuth'
+import { postJob } from '../../../Redux/BookaService'
 
 
 function CareProvidersNearYou() {
@@ -23,82 +24,68 @@ function CareProvidersNearYou() {
     try {
       const raw = localStorage.getItem('seeker_onboarding')
       return raw ? JSON.parse(raw) : { steps: {}, preview: null }
-    } catch (e) { return { steps: {}, preview: null } }
+    } catch { return { steps: {}, preview: null } }
   }
 
   const handleRegister = async () => {
-    if (!signupForm.email || !signupForm.password || signupForm.password !== signupForm.confirmPassword) {
-      alert('Please provide a valid email and matching passwords')
-      return
-    }
-
     const onboarding = readOnboarding()
 
-    // Build the complete job_data payload from all collected steps
+    // Build the complete job_data payload from collected steps
     const job_data = {
       service_category: (onboarding.steps?.careCategory || "childcare").toLowerCase(),
       details: {
         location_information: {
           use_current_location: onboarding.steps?.location?.useCurrentLocation || false,
-          preferred_language: onboarding.steps?.location?.preferredLanguage || "Select language",
-          country: onboarding.steps?.location?.country || "Select country",
-          state: onboarding.steps?.location?.state || "Select state", 
-          city: onboarding.steps?.location?.city || "Input city",
-          zip_code: onboarding.steps?.location?.zipCode || "Input zip code",
-          nationality: onboarding.steps?.location?.nationality || "Input nationality"
+          preferred_language: onboarding.steps?.location?.preferredLanguage || "English",
+          country: onboarding.steps?.location?.country || "",
+          state: onboarding.steps?.location?.state || "",
+          city: onboarding.steps?.location?.city || "",
+          zip_code: onboarding.steps?.location?.zipCode || "",
+          nationality: onboarding.steps?.location?.nationality || ""
         }
       },
-      job_type: onboarding.steps?.timeDetails?.scheduleType?.toLowerCase() === 'one-off' ? 'one-time' : 'recurring',
-      start_date: onboarding.steps?.timeDetails?.startDate || "2025-11-10",
-      end_date: onboarding.steps?.timeDetails?.endDate || "2026-02-10",
-      start_time: onboarding.steps?.timeDetails?.startTime || "09:00:00",
-      end_time: onboarding.steps?.timeDetails?.endTime || "17:00:00",
-      recurrence_pattern: {
-        frequency: (onboarding.steps?.timeDetails?.repeatFrequency || "Weekly").toLowerCase(),
-        days: onboarding.steps?.timeDetails?.repeatDays || ["Monday", "Wednesday", "Friday"]
+      schedule: {
+        job_type: onboarding.steps?.timeDetails?.scheduleType?.toLowerCase() === 'one-off' ? 'one-time' : 'recurring',
+        recurrence_pattern: {
+          frequency: (onboarding.steps?.timeDetails?.repeatFrequency || "Weekly").toLowerCase(),
+          days: onboarding.steps?.timeDetails?.repeatDays || ["Friday"]
+        }
       },
-      price_min: onboarding.steps?.timeDetails?.priceMin || "35.00",
-      price_max: onboarding.steps?.timeDetails?.priceMax || "55.00",
+      budget: {
+        price_min: parseFloat(onboarding.steps?.timeDetails?.priceMin) || 25.0,
+        price_max: parseFloat(onboarding.steps?.timeDetails?.priceMax) || 35.0
+      },
       message_to_provider: onboarding.steps?.summary?.messageToProvider || "We need someone reliable."
     }
 
-    // Add service-specific details based on category
-    if (onboarding.steps?.careCategory === 'Childcare') {
-      job_data.details.child_information = {
-        care_type: onboarding.steps?.childInfo?.childcareType || "Nanny",
-        number_of_children: onboarding.steps?.childInfo?.numberOfChildren || "1 child",
-        children: (onboarding.steps?.childInfo?.childrenDetails || []).map(child => ({
-          age: parseInt(child.age) || 15,
-          gender: child.gender || "Male"
-        }))
-      }
-      job_data.details.provider_experience = {
-        languages: onboarding.steps?.experience?.communicationLanguage || ["English"],
-        special_preferences: onboarding.steps?.experience?.specialPreferences || [],
-        preferred_option: (onboarding.steps?.experience?.preferredOption || ["Live-Out"])[0] || "Live-Out"
+    // Add service-specific details for housekeeping as example
+    if (onboarding.steps?.careCategory === 'Housekeeping') {
+      job_data.details.housekeeping_information = {
+        kind_of_housekeeping: onboarding.steps?.housekeeping?.housekeepingServices || [],
+        size_of_your_house: onboarding.steps?.housekeeping?.homeSize || '',
+        number_of_bedrooms: onboarding.steps?.housekeeping?.numberOfBedrooms || '',
+        number_of_bathrooms: onboarding.steps?.housekeeping?.numberOfBathrooms || '',
+        number_of_toilets: onboarding.steps?.housekeeping?.numberOfToilets || '',
+        pets_present: onboarding.steps?.housekeeping?.petsPresent || 'No',
+        specify_pet_present: onboarding.steps?.housekeeping?.petDetails || '',
+        additional_care: onboarding.steps?.housekeeping?.additionalCare || []
       }
     }
 
     const payload = {
-      user_data: {
-        full_name: signupForm.full_name || '',
-        email: signupForm.email,
-        password: signupForm.password,
-        password2: signupForm.confirmPassword,
-        user_type: 'seeker'
-      },
       job_data: job_data,
       title: onboarding.preview?.title || '',
-      summary: onboarding.preview?.summary || ''
+      summary: onboarding.preview?.summary || '',
+      skills_and_expertise: onboarding.preview?.skills || []
     }
 
     try {
-      const resAction = await dispatch(registerAndPublish(payload))
+      const resAction = await dispatch(postJob(payload))
       if (resAction.error) {
-        alert('Registration failed: ' + (resAction.payload || resAction.error.message))
+        alert('Publish failed: ' + JSON.stringify(resAction.payload || resAction.error))
       } else {
         alert('Success: ' + JSON.stringify(resAction.payload))
-        dispatch(saveStep({ stepName: 'registered', data: resAction.payload }))
+        dispatch(saveStep({ stepName: 'published', data: resAction.payload }))
         setShowPaymentPopup(false)
         setShowSubscribePopup(false)
         setShowSignupPopup(false)

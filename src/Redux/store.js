@@ -22,6 +22,7 @@ import messengerReducer from './Messenger'
 import seekerDashboardReducer from './SeekerDashboardHome'
 import providerReviewReducer from './ProviderReview'
 import startActivityReducer from './StartActivity'
+import bookaserviceReducer from './BookaService'
 
 export const store = configureStore({
   reducer: {
@@ -48,6 +49,7 @@ export const store = configureStore({
     careProviderRequests: careProviderRequestsReducer,
     messenger: messengerReducer,
     startActivity: startActivityReducer,
+    bookaservice: bookaserviceReducer,
   },
 })
 

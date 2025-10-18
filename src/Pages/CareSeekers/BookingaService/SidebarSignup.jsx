@@ -1,12 +1,10 @@
-import React from "react";
 import { TiTick } from "react-icons/ti";
 import { BsExclamationOctagonFill } from "react-icons/bs";
-import { IoIosPeople } from "react-icons/io";
+// IoIosPeople removed (not used in BookingaService sidebar)
 import { RiPagesLine } from "react-icons/ri";
 import { GrSchedule } from "react-icons/gr";
 import { IoMdPeople } from "react-icons/io";
-import { MdEmail } from "react-icons/md";
-import { RiLockPasswordFill } from "react-icons/ri";
+// Email/password icons not required for BookingaService
 
 export function getStepsForCategory(selectedCategory = "") {
   const commonSteps = [
@@ -46,12 +44,7 @@ export function getStepsForCategory(selectedCategory = "") {
           desc: "Review your information",
           icon: <RiPagesLine className="text-[#00b3a4] h-5 w-5"/>,
         },
-        {
-          id: 6,
-          name: "Care Providers",
-          desc: "View care providers near you",
-          icon: <IoIosPeople className="text-[#00b3a4] h-5 w-5"/>,
-        },
+        // Summary is now the final step
       ];
 
     case "Elderly Care":
@@ -81,12 +74,7 @@ export function getStepsForCategory(selectedCategory = "") {
           desc: "Review your information",
           icon: <RiPagesLine className="text-[#00b3a4] h-5 w-5"/>,
         },
-        {
-          id: 6,
-          name: "Care Providers",
-          desc: "View care providers near you",
-          icon: <IoIosPeople className="text-[#00b3a4] h-5 w-5"/>,
-        },
+        // Summary is now the final step
       ];
 
     case "Tutoring":
@@ -110,12 +98,7 @@ export function getStepsForCategory(selectedCategory = "") {
           desc: "Review your information",
           icon: <RiPagesLine className="text-[#00b3a4] h-5 w-5"/>,
         },
-        {
-          id: 5,
-          name: "Care Providers",
-          desc: "View tutors near you",
-          icon: <IoIosPeople className="text-[#00b3a4] h-5 w-5"/>,
-        },
+        // Summary is the final step
       ];
 
     case "Housekeeping":
@@ -139,12 +122,7 @@ export function getStepsForCategory(selectedCategory = "") {
           desc: "Review your information",
           icon: <RiPagesLine className="text-[#00b3a4] h-5 w-5"/>,
         },
-        {
-          id: 5,
-          name: "Care Providers",
-          desc: "View housekeepers near you",
-          icon: <IoIosPeople className="text-[#00b3a4] h-5 w-5"/>,
-        },
+        // Summary is the final step
       ];
 
     default:
