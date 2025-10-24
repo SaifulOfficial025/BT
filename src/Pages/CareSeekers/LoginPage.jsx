@@ -1,34 +1,41 @@
 import React, { useState } from "react";
 import CareLogo from "../../../public/CareLogo.png";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from 'react-redux'
-import { loginUser } from '../../Redux/Login'
+import { useDispatch } from "react-redux";
+import { loginUser } from "../../Redux/Login";
 
 function LoginPage(handleBack) {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState(null)
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    const result = await dispatch(loginUser({ email, password }))
+    e.preventDefault();
+    const result = await dispatch(loginUser({ email, password }));
     if (result && result.payload && result.payload.access) {
-      navigate('/careseekers/dashboard/home')
+      setError(null);
+      setSuccess("Login successful — redirecting...");
+      setTimeout(() => navigate("/careseekers/dashboard/home"), 700);
     } else {
-      setError(result.error?.message || JSON.stringify(result.payload) || 'Invalid credentials')
+      setError(
+        result.error?.message ||
+          JSON.stringify(result.payload) ||
+          "Invalid credentials"
+      );
     }
-  }
+  };
 
   React.useEffect(() => {
-    const access = localStorage.getItem('access')
-    const refresh = localStorage.getItem('refresh')
+    const access = localStorage.getItem("access");
+    const refresh = localStorage.getItem("refresh");
     if (!access || !refresh) {
-      navigate('/careseekers/login')
+      navigate("/careseekers/login");
     }
-  }, [navigate])
+  }, [navigate]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
@@ -53,10 +60,17 @@ function LoginPage(handleBack) {
           </Link>
         </div>
 
-        <h2 className="text-2xl font-semibold text-gray-800 font-tomato">Log In</h2>
+        <h2 className="text-2xl font-semibold text-gray-800 font-tomato">
+          Log In
+        </h2>
         {error && (
           <div className="bg-red-100 text-red-800 px-4 py-2 rounded mb-4 text-sm">
             {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">
+            {success}
           </div>
         )}
         <p className="text-gray-500 text-md mt-1 mb-6 font-sfpro">
@@ -64,7 +78,7 @@ function LoginPage(handleBack) {
         </p>
 
         {/* Form */}
-  <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {/* Email */}
           <div>
             <label className="block text-sm font-medium  mb-1 text-gray-700 font-sfpro ">
@@ -80,7 +94,7 @@ function LoginPage(handleBack) {
           </div>
 
           {/* Password with Eye Icon */}
-          <div className="font-sfpro"> 
+          <div className="font-sfpro">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
@@ -139,7 +153,12 @@ function LoginPage(handleBack) {
                 )}
               </button>
             </div>
-            <a href="#" className="text-xs text-[#007bb0] inline-block mt-5 mb-5">Forgot password?</a>
+            <a
+              href="#"
+              className="text-xs text-[#007bb0] inline-block mt-5 mb-5"
+            >
+              Forgot password?
+            </a>
           </div>
 
           {/* Login Button */}
