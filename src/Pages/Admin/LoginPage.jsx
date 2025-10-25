@@ -3,13 +3,13 @@ import CareLogo from "../../../public/CareLogo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginUser } from "../../Redux/Login";
+import formatAuthError from "../../utils/formatAuthError";
 
 function LoginPage(handleBack) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -31,17 +31,22 @@ function LoginPage(handleBack) {
 
       if (access) {
         console.log("Access token found, redirecting to /admin");
-        setError(null);
-        setSuccess("Login successful — redirecting...");
-        setTimeout(() => navigate("/admin"), 700);
+        navigate("/admin");
         return;
       }
 
-      setError(
-        result.error?.message ||
-          JSON.stringify(result.payload) ||
-          "Invalid credentials"
-      );
+      const raw = formatAuthError(result);
+      if (/user type|wrong user|incorrect user|not authorized/i.test(raw)) {
+        setError("Wrong user type — please login through the correct portal");
+      } else if (/network error/i.test(raw)) {
+        setError("Network error — please check your connection");
+      } else if (
+        /401|invalid credentials|credentials|unauthorized/i.test(raw)
+      ) {
+        setError("Wrong credentials — please check your email and password");
+      } else {
+        setError(raw);
+      }
     }, 100);
   };
 
@@ -83,11 +88,6 @@ function LoginPage(handleBack) {
         {error && (
           <div className="bg-red-100 text-red-800 px-4 py-2 rounded mb-4 text-sm">
             {error}
-          </div>
-        )}
-        {success && (
-          <div className="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">
-            {success}
           </div>
         )}
         <p className="text-gray-500 text-md mt-1 mb-6 font-sfpro">

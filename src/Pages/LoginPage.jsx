@@ -28,7 +28,9 @@ function LoginPage(handleBack) {
           </Link>
         </div>
 
-        <h2 className="text-xl font-semibold text-gray-800 font-tomato">Log In</h2>
+        <h2 className="text-xl font-semibold text-gray-800 font-tomato">
+          Log In
+        </h2>
         <p className="text-gray-500 text-sm mt-1 mb-6">
           Welcome back, Please enter your login details
         </p>
