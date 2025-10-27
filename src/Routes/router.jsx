@@ -29,6 +29,8 @@ import SettingsProvider from "../Pages/CareProviders/Dashboard/Settings";
 import VerifyIdentityProvider from "../Pages/CareProviders/Dashboard/VerifyIdentity";
 import PasswordProvider from "../Pages/CareProviders/Dashboard/Password";
 import WalletProvider from "../Pages/CareProviders/Dashboard/Wallet";
+import Payment from "../Pages/CareProviders/Dashboard/Payment";
+
 import Summary from "../Pages/CareSeekers/Dashboard/Summary";
 import AdminLayout from "../Pages/Admin/AdminLayout";
 import AdminLoginPage from "../Pages/Admin/LoginPage";
@@ -180,6 +182,10 @@ export const router = createBrowserRouter([
     element: <WalletProvider />,
   },
   {
+    path: "/careproviders/dashboard/payment",
+    element: <Payment />,
+  },
+  {
     path: "/careseekers/dashboard/summary",
     element: <Summary />,
   },
@@ -197,11 +203,17 @@ export const router = createBrowserRouter([
       { path: "activities", element: <Activities /> },
       { path: "earnings", element: <Earnings /> },
       { path: "subscription", element: <Subscription /> },
-  { path: "support", element: <Support /> },
-  { path: "profile-verification", element: <ProfileVerificationSeeker /> },
-  { path: "profile-verification/care-seekers", element: <ProfileVerificationSeeker /> },
-  { path: "profile-verification/care-providers", element: <ProfileVerificationProvider /> },
-  { path: "messages", element: <MessageAdmin /> },
+      { path: "support", element: <Support /> },
+      { path: "profile-verification", element: <ProfileVerificationSeeker /> },
+      {
+        path: "profile-verification/care-seekers",
+        element: <ProfileVerificationSeeker />,
+      },
+      {
+        path: "profile-verification/care-providers",
+        element: <ProfileVerificationProvider />,
+      },
+      { path: "messages", element: <MessageAdmin /> },
     ],
   },
 ]);

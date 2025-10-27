@@ -5,43 +5,51 @@ import { useDispatch } from "react-redux";
 import { uploadVerificationId } from "../../../Redux/Verification";
 
 function VerifyIdentity() {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const fileInputRef = useRef();
+  const [selectedFileId, setSelectedFileId] = useState(null);
+  const [selectedFileSelf, setSelectedFileSelf] = useState(null);
+  const fileInputRefId = useRef();
+  const fileInputRefSelf = useRef();
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e, target = "id") => {
     const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-    }
+    if (!file) return;
+    if (target === "id") setSelectedFileId(file);
+    else setSelectedFileSelf(file);
   };
 
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+  const handleRemoveFile = (target = "id") => {
+    if (target === "id") {
+      setSelectedFileId(null);
+      if (fileInputRefId.current) fileInputRefId.current.value = "";
+    } else {
+      setSelectedFileSelf(null);
+      if (fileInputRefSelf.current) fileInputRefSelf.current.value = "";
     }
   };
 
   const dispatch = useDispatch();
   const [uploading, setUploading] = useState(false);
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
+  const handleUpload = async (target = "id") => {
+    const file = target === "id" ? selectedFileId : selectedFileSelf;
+    if (!file) {
       alert("Please choose a file first");
       return;
     }
     setUploading(true);
     try {
-      const res = await dispatch(uploadVerificationId(selectedFile));
+      const res = await dispatch(
+        uploadVerificationId({ file, type: target === "id" ? "id" : "image" })
+      );
       if (res && res.payload && res.payload.message) {
         alert(res.payload.message);
         // clear selected file on success
-        handleRemoveFile();
+        handleRemoveFile(target);
       } else if (res && res.error && res.error.message) {
         alert(res.error.message);
       } else {
         alert("Upload completed");
-        handleRemoveFile();
+        handleRemoveFile(target);
       }
     } catch (err) {
       console.error(err);
@@ -74,11 +82,11 @@ function VerifyIdentity() {
           </div>
           <div className="w-full mx-auto bg-white border border-gray-200 rounded-lg flex flex-col items-center justify-center py-16">
             <img src={UploadIcon} alt="Upload Icon" className="mb-4 h-20" />
-            {!selectedFile ? (
+            {!selectedFileId ? (
               <>
                 <button
                   className=" text-[#0d99c9] px-6 py-2 rounded text-2xl mb-3 hover:bg-[#007bb0] hover:text-white"
-                  onClick={() => fileInputRef.current.click()}
+                  onClick={() => fileInputRefId.current.click()}
                 >
                   Upload File
                 </button>
@@ -86,8 +94,8 @@ function VerifyIdentity() {
                   type="file"
                   accept=".jpg,.png"
                   style={{ display: "none" }}
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
+                  ref={fileInputRefId}
+                  onChange={(e) => handleFileChange(e, "id")}
                 />
                 <div className="text-gray-400 text-sm text-center">
                   Supported format: jpg, png
@@ -98,11 +106,11 @@ function VerifyIdentity() {
             ) : (
               <div className="flex flex-col items-center gap-2">
                 <div className="text-[#0d99c9] font-semibold text-lg mb-2">
-                  {selectedFile.name}
+                  {selectedFileId.name}
                 </div>
-                {selectedFile && (
+                {selectedFileId && (
                   <img
-                    src={URL.createObjectURL(selectedFile)}
+                    src={URL.createObjectURL(selectedFileId)}
                     alt="Preview"
                     className="max-h-48 max-w-xs rounded-lg border border-gray-200 mb-2"
                   />
@@ -110,13 +118,72 @@ function VerifyIdentity() {
                 <div className="flex gap-2">
                   <button
                     className="bg-red-100 text-red-600 px-4 py-1 rounded font-medium hover:bg-red-200"
-                    onClick={handleRemoveFile}
+                    onClick={() => handleRemoveFile("id")}
                   >
                     Remove
                   </button>
                   <button
                     className="bg-red-100 text-green-600 px-4 py-1 rounded font-medium hover:bg-red-200 disabled:opacity-50"
-                    onClick={handleUpload}
+                    onClick={() => handleUpload("id")}
+                    disabled={uploading}
+                  >
+                    {uploading ? "Uploading..." : "Upload"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="max-w-xl">
+          <div className="mb-4 text-gray-700 font-medium mt-10">
+            Upload a picture of yourself
+          </div>
+          <div className="w-full mx-auto bg-white border border-gray-200 rounded-lg flex flex-col items-center justify-center py-16">
+            <img src={UploadIcon} alt="Upload Icon" className="mb-4 h-20" />
+            {!selectedFileSelf ? (
+              <>
+                <button
+                  className=" text-[#0d99c9] px-6 py-2 rounded text-2xl mb-3 hover:bg-[#007bb0] hover:text-white"
+                  onClick={() => fileInputRefSelf.current.click()}
+                >
+                  Upload File
+                </button>
+                <input
+                  type="file"
+                  accept=".jpg,.png"
+                  style={{ display: "none" }}
+                  ref={fileInputRefSelf}
+                  onChange={(e) => handleFileChange(e, "self")}
+                />
+                <div className="text-gray-400 text-sm text-center">
+                  Supported format: jpg, png
+                  <br />
+                  Maximum Size: 3MB
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <div className="text-[#0d99c9] font-semibold text-lg mb-2">
+                  {selectedFileSelf.name}
+                </div>
+                {selectedFileSelf && (
+                  <img
+                    src={URL.createObjectURL(selectedFileSelf)}
+                    alt="Preview"
+                    className="max-h-48 max-w-xs rounded-lg border border-gray-200 mb-2"
+                  />
+                )}
+                <div className="flex gap-2">
+                  <button
+                    className="bg-red-100 text-red-600 px-4 py-1 rounded font-medium hover:bg-red-200"
+                    onClick={() => handleRemoveFile("self")}
+                  >
+                    Remove
+                  </button>
+                  <button
+                    className="bg-red-100 text-green-600 px-4 py-1 rounded font-medium hover:bg-red-200 disabled:opacity-50"
+                    onClick={() => handleUpload("self")}
                     disabled={uploading}
                   >
                     {uploading ? "Uploading..." : "Upload"}
