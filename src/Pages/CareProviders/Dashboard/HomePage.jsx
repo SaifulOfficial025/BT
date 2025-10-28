@@ -53,7 +53,7 @@ export default function HomePage() {
     );
 
   return (
-    <div className="flex min-h-screen bg-white ">
+    <div className="flex min-h-screen bg-white font-sfpro">
       <Sidebar active="Home" />
       <div className="flex-1 font-sfpro px-4 md:px-6 md:ml-64">
         <div className="bg-[#f5f8ff] py-5 px-2">

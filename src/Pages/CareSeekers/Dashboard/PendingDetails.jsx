@@ -84,7 +84,7 @@ function PendingDetails() {
   const posted = source?.posted_ago || source?.posted || "";
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 font-sfpro">
       <Sidebar active="Home" />
       <div className="flex-1 font-sfpro px-8 py-8 md:ml-64 overflow-y-auto">
         <div className="flex items-center mb-8">

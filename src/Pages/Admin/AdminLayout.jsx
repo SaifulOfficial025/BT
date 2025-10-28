@@ -32,7 +32,7 @@ function AdminLayout() {
   console.log('Access token found, rendering admin layout')
 
   return (
-    <div className="flex h-screen bg-[#f5f7f9]">
+    <div className="flex h-screen bg-[#f5f7f9] font-sfpro">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title={pageTitle} />

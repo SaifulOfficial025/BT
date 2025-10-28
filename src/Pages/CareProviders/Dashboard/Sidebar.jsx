@@ -73,7 +73,7 @@ function Sidebar({ active = "Home", onNav }) {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-40">
+        <div className="md:hidden fixed inset-0 z-40 font-sfpro">
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setMobileOpen(false)}

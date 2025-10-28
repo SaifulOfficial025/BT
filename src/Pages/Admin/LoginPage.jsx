@@ -60,7 +60,7 @@ function LoginPage(handleBack) {
   }, [navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white font-sfpro">
       {/* Logo + Title */}
       <div className="flex items-center mb-8 space-x-2">
         <img src={CareLogo} alt="CareNestPro Logo" className="h-14" />

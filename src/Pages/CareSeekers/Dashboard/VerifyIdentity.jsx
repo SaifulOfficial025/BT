@@ -54,7 +54,7 @@ function VerifyIdentity() {
   // (no extra helper needed)
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-white font-sfpro">
       <Sidebar active="Setting" />
       <div className="flex-1 font-sfpro px-8 py-8 md:ml-64">
         <div className="mb-8 flex items-center">

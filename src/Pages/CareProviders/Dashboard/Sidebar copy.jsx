@@ -34,7 +34,7 @@ function Sidebar({ active = "Home", onNav }) {
     }
   };
   return (
-    <div className="h-screen w-64 bg-[#0e2f43] flex flex-col py-8 px-6 text-white font-sfpro fixed top-0 left-0 z-40">
+    <div className="h-screen w-64 bg-[#0e2f43] flex flex-col py-8 px-6 text-white font-sfpro fixed top-0 left-0 z-40 font-sfpro">
       <div className="flex items-center mb-12">
         <img src={CareLogo} alt="CareNestPro Logo" className="h-10 mr-3" />
         <span className="text-xl  tracking-wide font-sfpro">CareNestPro</span>
@@ -43,7 +43,9 @@ function Sidebar({ active = "Home", onNav }) {
         {navItems.map((item) => (
           <button
             key={item.label}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium text-base hover:bg-[#4a6576] focus:outline-none ${active === item.label ? "bg-[#4a6576]" : ""}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium text-base hover:bg-[#4a6576] focus:outline-none ${
+              active === item.label ? "bg-[#4a6576]" : ""
+            }`}
             onClick={() => handleNav(item.label)}
           >
             <span className="sidebar-icon mr-2 text-xl">{item.icon}</span>

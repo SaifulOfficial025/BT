@@ -23,7 +23,7 @@ function CareProvidersNearYou() {
   }, [dispatch]);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 font-sfpro">
       <Sidebar active="Care Providers" />
       <div className="flex-1 font-sfpro px-4 md:px-8 py-8 md:ml-64">
         {/* Main Content (Blurred when signup popup is active) */}

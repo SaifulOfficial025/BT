@@ -39,7 +39,7 @@ function Home() {
     activeRequests && activeRequests.length > 0 ? activeRequests[0] : null;
 
   return (
-    <div className="flex min-h-screen ">
+    <div className="flex min-h-screen font-sfpro">
       <Sidebar active="Home" />
       <div className="flex-1 bg-white px-6 py-5 font-sfpro md:ml-64">
         {/* Ensure sidebar highlights Home when this component is used inside dashboard layout */}

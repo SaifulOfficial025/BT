@@ -461,7 +461,7 @@ function Message() {
   }, [displayMessages]);
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen bg-white overflow-hidden font-sfpro">
       <Sidebar active="Message" />
       <div className="flex-1 font-sfpro md:ml-64 flex h-screen">
         {/* Left: Messages List (hidden on mobile when chat is open) */}
