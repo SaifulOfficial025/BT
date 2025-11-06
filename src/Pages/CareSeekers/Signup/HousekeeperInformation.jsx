@@ -74,7 +74,7 @@ function HousekeeperInformation({
                         updateFormData("city", d.city || formData.city);
                         updateFormData(
                           "zipCode",
-                          d.postcode || formData.zipCode
+                          d.zip_code || d.postcode || formData.zipCode
                         );
                         updateFormData(
                           "nationality",

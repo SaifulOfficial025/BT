@@ -72,7 +72,7 @@ function HouseKeepingDetails({
                           updateFormData("city", d.city || formData.city);
                           updateFormData(
                             "zipCode",
-                            d.postcode || formData.zipCode
+                            d.zip_code || d.postcode || formData.zipCode
                           );
                           updateFormData(
                             "nationality",
@@ -150,6 +150,26 @@ function HouseKeepingDetails({
               <p className="text-sm text-red-600 mt-1">{errors.lastName}</p>
             )}
           </div>
+        </div>
+
+        <p className="text-sm text-gray-500 mb-6">
+          Kindly select options to help us understand your preferences
+        </p>
+
+        <div className="flex items-center mb-6">
+          <input
+            type="checkbox"
+            id="useLocation"
+            checked={formData.useCurrentLocation}
+            onChange={(e) => {
+              updateFormData("useCurrentLocation", e.target.checked);
+              if (e.target.checked) setShowLocationPopup(true);
+            }}
+            className="mr-3"
+          />
+          <label htmlFor="useLocation" className="text-sm text-gray-700">
+            Use my current Location instead
+          </label>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
