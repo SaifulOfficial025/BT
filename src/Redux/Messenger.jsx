@@ -1,209 +1,218 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { BASE_URL, getAuthHeaders } from './config'
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { BASE_URL, getAuthHeaders } from "./config";
 
 // 1. Fetch conversations list
 export const fetchConversations = createAsyncThunk(
-  'messenger/fetchConversations',
+  "messenger/fetchConversations",
   async (_, { rejectWithValue }) => {
     try {
       const res = await fetch(`${BASE_URL}/api/conversations/`, {
-        headers: getAuthHeaders()
-      })
+        headers: getAuthHeaders(),
+      });
       if (!res.ok) {
-        const errorText = await res.text()
-        return rejectWithValue(errorText)
+        const errorText = await res.text();
+        return rejectWithValue(errorText);
       }
-      const data = await res.json()
-      return data
+      const data = await res.json();
+      return data;
     } catch (error) {
-      return rejectWithValue(error.message)
+      return rejectWithValue(error.message);
     }
   }
-)
+);
 
 // 2. Fetch messages for a specific conversation
 export const fetchMessages = createAsyncThunk(
-  'messenger/fetchMessages',
+  "messenger/fetchMessages",
   async (conversationId, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${BASE_URL}/api/messages/?conversation_id=${conversationId}`, {
-        headers: getAuthHeaders()
-      })
+      const res = await fetch(
+        `${BASE_URL}/api/messages/?conversation_id=${conversationId}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
       if (!res.ok) {
-        const errorText = await res.text()
-        return rejectWithValue(errorText)
+        const errorText = await res.text();
+        return rejectWithValue(errorText);
       }
-      const data = await res.json()
-      return { conversationId, messages: data }
+      const data = await res.json();
+      return { conversationId, messages: data };
     } catch (error) {
-      return rejectWithValue(error.message)
+      return rejectWithValue(error.message);
     }
   }
-)
+);
 
 // 3. Send a message
 export const sendMessage = createAsyncThunk(
-  'messenger/sendMessage',
+  "messenger/sendMessage",
   async ({ conversationId, content }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${BASE_URL}/api/messages/?conversation_id=${conversationId}`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ content })
-      })
+      const res = await fetch(
+        `${BASE_URL}/api/messages/?conversation_id=${conversationId}`,
+        {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ content }),
+        }
+      );
       if (!res.ok) {
-        const errorText = await res.text()
-        return rejectWithValue(errorText)
+        const errorText = await res.text();
+        return rejectWithValue(errorText);
       }
-      const data = await res.json()
-      return { conversationId, message: data }
+      const data = await res.json();
+      return { conversationId, message: data };
     } catch (error) {
-      return rejectWithValue(error.message)
+      return rejectWithValue(error.message);
     }
   }
-)
+);
 
 // 4. Mark conversation as read
 export const markAsRead = createAsyncThunk(
-  'messenger/markAsRead',
+  "messenger/markAsRead",
   async (conversationId, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${BASE_URL}/api/conversations/${conversationId}/mark-as-read/`, {
-        method: 'POST',
-        headers: getAuthHeaders()
-      })
+      const res = await fetch(
+        `${BASE_URL}/api/conversations/${conversationId}/mark-as-read/`,
+        {
+          method: "POST",
+          headers: getAuthHeaders(),
+        }
+      );
       if (!res.ok) {
-        const errorText = await res.text()
-        return rejectWithValue(errorText)
+        const errorText = await res.text();
+        return rejectWithValue(errorText);
       }
-      const data = await res.json()
-      return { conversationId, response: data }
+      const data = await res.json();
+      return { conversationId, response: data };
     } catch (error) {
-      return rejectWithValue(error.message)
+      return rejectWithValue(error.message);
     }
   }
-)
+);
 
 // Create a new conversation with another user
 export const createConversation = createAsyncThunk(
-  'messenger/createConversation',
+  "messenger/createConversation",
   async (otherUserId, { rejectWithValue }) => {
     try {
       const res = await fetch(`${BASE_URL}/api/conversations/create/`, {
-        method: 'POST',
+        method: "POST",
         headers: {
           ...getAuthHeaders(),
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ other_user_id: otherUserId })
-      })
+        body: JSON.stringify({ other_user_id: otherUserId }),
+      });
       if (!res.ok) {
-        const text = await res.text()
-        return rejectWithValue(text)
+        const text = await res.text();
+        return rejectWithValue(text);
       }
-      const data = await res.json()
-      return data
+      const data = await res.json();
+      return data;
     } catch (err) {
-      return rejectWithValue(err.message)
+      return rejectWithValue(err.message);
     }
   }
-)
+);
 
 // WebSocket connection management
 class WebSocketManager {
   constructor() {
-    this.socket = null
-    this.conversationId = null
-    this.token = null
-    this.onMessageCallback = null
-    this.onConnectionCallback = null
+    this.socket = null;
+    this.conversationId = null;
+    this.token = null;
+    this.onMessageCallback = null;
+    this.onConnectionCallback = null;
   }
 
   connect(conversationId, token, onMessage, onConnection) {
-    this.conversationId = conversationId
-    this.token = token
-    this.onMessageCallback = onMessage
-    this.onConnectionCallback = onConnection
+    this.conversationId = conversationId;
+    this.token = token;
+    this.onMessageCallback = onMessage;
+    this.onConnectionCallback = onConnection;
 
     if (this.socket) {
-      this.disconnect()
+      this.disconnect();
     }
 
-    const wsUrl = `wss://carenestpro.duckdns.org/ws/chat/${conversationId}/?token=${token}`
-    this.socket = new WebSocket(wsUrl)
+    const wsUrl = `wss://backend.staging.bristones.com/ws/chat/${conversationId}/?token=${token}`;
+    this.socket = new WebSocket(wsUrl);
 
     this.socket.onopen = () => {
-      console.log('WebSocket connected')
+      console.log("WebSocket connected");
       if (this.onConnectionCallback) {
-        this.onConnectionCallback({ type: 'connected' })
+        this.onConnectionCallback({ type: "connected" });
       }
-    }
+    };
 
     this.socket.onmessage = (event) => {
       try {
         // Log raw frame for debugging
-  console.debug('WebSocket frame:', event.data)
-        const data = JSON.parse(event.data)
+        console.debug("WebSocket frame:", event.data);
+        const data = JSON.parse(event.data);
         if (this.onMessageCallback) {
-          this.onMessageCallback(data)
+          this.onMessageCallback(data);
         }
       } catch (error) {
-        console.error('Error parsing WebSocket message:', error)
+        console.error("Error parsing WebSocket message:", error);
       }
-    }
+    };
 
     this.socket.onclose = () => {
-      console.log('WebSocket disconnected')
+      console.log("WebSocket disconnected");
       if (this.onConnectionCallback) {
-        this.onConnectionCallback({ type: 'disconnected' })
+        this.onConnectionCallback({ type: "disconnected" });
       }
-    }
+    };
 
     this.socket.onerror = (error) => {
-      console.error('WebSocket error:', error)
+      console.error("WebSocket error:", error);
       if (this.onConnectionCallback) {
-        this.onConnectionCallback({ type: 'error', error })
+        this.onConnectionCallback({ type: "error", error });
       }
-    }
+    };
   }
 
   sendMessage(message) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({ message }))
-      return true
+      this.socket.send(JSON.stringify({ message }));
+      return true;
     }
-    return false
+    return false;
   }
 
   disconnect() {
     if (this.socket) {
-      this.socket.close()
-      this.socket = null
+      this.socket.close();
+      this.socket = null;
     }
   }
 
   isConnected() {
-    return this.socket && this.socket.readyState === WebSocket.OPEN
+    return this.socket && this.socket.readyState === WebSocket.OPEN;
   }
 }
 
 // Create WebSocket manager instance
-const wsManager = new WebSocketManager()
+const wsManager = new WebSocketManager();
 
 const initialState = {
   // Conversations
   conversations: [],
   conversationsLoading: false,
   conversationsError: null,
-  
+
   // Messages
   messagesByConversation: {}, // { conversationId: [messages] }
   messagesLoading: {},
   messagesError: {},
-  
+
   // Current conversation
   activeConversationId: null,
-  
+
   // WebSocket
   wsConnected: false,
   wsError: null,
@@ -211,215 +220,231 @@ const initialState = {
   creatingConversation: false,
   createConversationError: null,
   lastCreatedConversationId: null,
-  
+
   // UI state
   sendingMessage: false,
-  sendMessageError: null
-}
+  sendMessageError: null,
+};
 
 const messengerSlice = createSlice({
-  name: 'messenger',
+  name: "messenger",
   initialState,
   reducers: {
     // Set active conversation
     setActiveConversation: (state, action) => {
-      state.activeConversationId = action.payload
+      state.activeConversationId = action.payload;
     },
-    
+
     // WebSocket actions
     setWebSocketConnected: (state, action) => {
-      state.wsConnected = action.payload
+      state.wsConnected = action.payload;
     },
-    
+
     setWebSocketError: (state, action) => {
-      state.wsError = action.payload
+      state.wsError = action.payload;
     },
-    
+
     // Add real-time message from WebSocket
     addRealtimeMessage: (state, action) => {
-      let { conversationId, message } = action.payload
-      const cid = String(conversationId)
+      let { conversationId, message } = action.payload;
+      const cid = String(conversationId);
       if (!state.messagesByConversation[cid]) {
-        state.messagesByConversation[cid] = []
+        state.messagesByConversation[cid] = [];
       }
-      
+
       // Convert WebSocket message format to API message format
       const formattedMessage = {
         id: `ws_${Date.now()}_${message.sender_id}`, // Unique ID for WebSocket messages
         sender: message.sender_id,
         sender_name: message.sender_name,
         content: message.message,
-        timestamp: message.timestamp
-      }
-      
+        timestamp: message.timestamp,
+      };
+
       // Check if message already exists (prevent duplicates)
       const exists = state.messagesByConversation[cid].some(
-        msg => msg.content === formattedMessage.content && 
-               String(msg.sender) === String(formattedMessage.sender) &&
-               Math.abs(new Date(msg.timestamp) - new Date(formattedMessage.timestamp)) < 5000 // Within 5 seconds
-      )
-      
+        (msg) =>
+          msg.content === formattedMessage.content &&
+          String(msg.sender) === String(formattedMessage.sender) &&
+          Math.abs(
+            new Date(msg.timestamp) - new Date(formattedMessage.timestamp)
+          ) < 5000 // Within 5 seconds
+      );
+
       if (!exists) {
-        state.messagesByConversation[cid].push(formattedMessage)
+        state.messagesByConversation[cid].push(formattedMessage);
         // Debug: log that reducer added a real-time message
-  console.debug('addRealtimeMessage -> added', cid, formattedMessage)
-        
+        console.debug("addRealtimeMessage -> added", cid, formattedMessage);
+
         // Update last message in conversations list and move to top
-        const conversationIndex = state.conversations.findIndex(c => String(c.id) === cid)
+        const conversationIndex = state.conversations.findIndex(
+          (c) => String(c.id) === cid
+        );
         if (conversationIndex >= 0) {
-          const conversation = state.conversations[conversationIndex]
+          const conversation = state.conversations[conversationIndex];
           conversation.last_message = {
             content: message.message,
-            timestamp: message.timestamp
-          }
-          
+            timestamp: message.timestamp,
+          };
+
           // Move conversation to top of list for real-time sorting (like WhatsApp)
           if (conversationIndex > 0) {
-            state.conversations.splice(conversationIndex, 1)
-            state.conversations.unshift(conversation)
+            state.conversations.splice(conversationIndex, 1);
+            state.conversations.unshift(conversation);
           }
         }
       }
     },
-    
+
     // Clear messages error
     clearMessagesError: (state, action) => {
-      const conversationId = action.payload
+      const conversationId = action.payload;
       if (state.messagesError[conversationId]) {
-        delete state.messagesError[conversationId]
+        delete state.messagesError[conversationId];
       }
     },
-    
+
     // Clear send message error
     clearSendMessageError: (state) => {
-      state.sendMessageError = null
-    }
+      state.sendMessageError = null;
+    },
   },
   extraReducers: (builder) => {
     builder
       // Fetch conversations
       .addCase(fetchConversations.pending, (state) => {
-        state.conversationsLoading = true
-        state.conversationsError = null
+        state.conversationsLoading = true;
+        state.conversationsError = null;
       })
       .addCase(fetchConversations.fulfilled, (state, action) => {
-        state.conversationsLoading = false
-        
+        state.conversationsLoading = false;
+
         // Ensure unique conversations based on ID
-        const uniqueConversations = action.payload.reduce((acc, conversation) => {
-          const existingIndex = acc.findIndex(c => c.id === conversation.id)
-          if (existingIndex >= 0) {
-            // Update existing conversation with latest data
-            acc[existingIndex] = conversation
-          } else {
-            acc.push(conversation)
-          }
-          return acc
-        }, [])
-        
-        state.conversations = uniqueConversations
+        const uniqueConversations = action.payload.reduce(
+          (acc, conversation) => {
+            const existingIndex = acc.findIndex(
+              (c) => c.id === conversation.id
+            );
+            if (existingIndex >= 0) {
+              // Update existing conversation with latest data
+              acc[existingIndex] = conversation;
+            } else {
+              acc.push(conversation);
+            }
+            return acc;
+          },
+          []
+        );
+
+        state.conversations = uniqueConversations;
       })
       .addCase(fetchConversations.rejected, (state, action) => {
-        state.conversationsLoading = false
-        state.conversationsError = action.payload
+        state.conversationsLoading = false;
+        state.conversationsError = action.payload;
       })
-      
+
       // Fetch messages
       .addCase(fetchMessages.pending, (state, action) => {
-        const conversationId = action.meta.arg
-        state.messagesLoading[conversationId] = true
+        const conversationId = action.meta.arg;
+        state.messagesLoading[conversationId] = true;
         if (state.messagesError[conversationId]) {
-          delete state.messagesError[conversationId]
+          delete state.messagesError[conversationId];
         }
       })
       .addCase(fetchMessages.fulfilled, (state, action) => {
-        const { conversationId, messages } = action.payload
-        const cid = String(conversationId)
-        state.messagesLoading[cid] = false
-        state.messagesByConversation[cid] = messages
+        const { conversationId, messages } = action.payload;
+        const cid = String(conversationId);
+        state.messagesLoading[cid] = false;
+        state.messagesByConversation[cid] = messages;
       })
       .addCase(fetchMessages.rejected, (state, action) => {
-        const conversationId = action.meta.arg
-        state.messagesLoading[conversationId] = false
-        state.messagesError[conversationId] = action.payload
+        const conversationId = action.meta.arg;
+        state.messagesLoading[conversationId] = false;
+        state.messagesError[conversationId] = action.payload;
       })
-      
+
       // Send message
       .addCase(sendMessage.pending, (state) => {
-        state.sendingMessage = true
-        state.sendMessageError = null
+        state.sendingMessage = true;
+        state.sendMessageError = null;
       })
       .addCase(sendMessage.fulfilled, (state, action) => {
-        state.sendingMessage = false
-        const { conversationId, message } = action.payload
-        
-        const cid = String(conversationId)
+        state.sendingMessage = false;
+        const { conversationId, message } = action.payload;
+
+        const cid = String(conversationId);
         // Add message to conversation only if not already added via WebSocket
         if (!state.messagesByConversation[cid]) {
-          state.messagesByConversation[cid] = []
+          state.messagesByConversation[cid] = [];
         }
-        
+
         // Check if message already exists (could have been added via WebSocket)
         const exists = state.messagesByConversation[cid].some(
-          msg => msg.content === message.content && 
-                 String(msg.sender) === String(message.sender) &&
-                 Math.abs(new Date(msg.timestamp) - new Date(message.timestamp)) < 5000
-        )
-        
+          (msg) =>
+            msg.content === message.content &&
+            String(msg.sender) === String(message.sender) &&
+            Math.abs(new Date(msg.timestamp) - new Date(message.timestamp)) <
+              5000
+        );
+
         if (!exists) {
-          state.messagesByConversation[cid].push(message)
-          
+          state.messagesByConversation[cid].push(message);
+
           // Update last message in conversations list and move to top
-          const conversationIndex = state.conversations.findIndex(c => String(c.id) === cid)
+          const conversationIndex = state.conversations.findIndex(
+            (c) => String(c.id) === cid
+          );
           if (conversationIndex >= 0) {
-            const conversation = state.conversations[conversationIndex]
+            const conversation = state.conversations[conversationIndex];
             conversation.last_message = {
               content: message.content,
-              timestamp: message.timestamp
-            }
-            
+              timestamp: message.timestamp,
+            };
+
             // Move conversation to top of list when you send a message
             if (conversationIndex > 0) {
-              state.conversations.splice(conversationIndex, 1)
-              state.conversations.unshift(conversation)
+              state.conversations.splice(conversationIndex, 1);
+              state.conversations.unshift(conversation);
             }
           }
         }
       })
       .addCase(sendMessage.rejected, (state, action) => {
-        state.sendingMessage = false
-        state.sendMessageError = action.payload
+        state.sendingMessage = false;
+        state.sendMessageError = action.payload;
       })
-      
+
       // Mark as read
       .addCase(markAsRead.fulfilled, (state, action) => {
-        const { conversationId } = action.payload
+        const { conversationId } = action.payload;
         // Update unread count in conversations list
-        const conversation = state.conversations.find(c => c.id === conversationId)
+        const conversation = state.conversations.find(
+          (c) => c.id === conversationId
+        );
         if (conversation) {
-          conversation.unread_count = 0
+          conversation.unread_count = 0;
         }
       })
       // Create conversation
       .addCase(createConversation.pending, (state) => {
-        state.creatingConversation = true
-        state.createConversationError = null
-        state.lastCreatedConversationId = null
+        state.creatingConversation = true;
+        state.createConversationError = null;
+        state.lastCreatedConversationId = null;
       })
       .addCase(createConversation.fulfilled, (state, action) => {
-        state.creatingConversation = false
+        state.creatingConversation = false;
         // Expecting response: { conversation_id: 31 }
-        const cid = action.payload?.conversation_id ?? action.payload?.id
+        const cid = action.payload?.conversation_id ?? action.payload?.id;
         if (cid) {
-          state.lastCreatedConversationId = String(cid)
+          state.lastCreatedConversationId = String(cid);
         }
       })
       .addCase(createConversation.rejected, (state, action) => {
-        state.creatingConversation = false
-        state.createConversationError = action.payload || action.error?.message
-      })
-  }
-})
+        state.creatingConversation = false;
+        state.createConversationError = action.payload || action.error?.message;
+      });
+  },
+});
 
 // Export actions
 export const {
@@ -428,76 +453,90 @@ export const {
   setWebSocketError,
   addRealtimeMessage,
   clearMessagesError,
-  clearSendMessageError
-} = messengerSlice.actions
+  clearSendMessageError,
+} = messengerSlice.actions;
 
 // WebSocket action creators
 export const connectWebSocket = (conversationId) => (dispatch) => {
-  const token = localStorage.getItem('access')
+  const token = localStorage.getItem("access");
   if (!token) {
-    dispatch(setWebSocketError('No authentication token found'))
-    return
+    dispatch(setWebSocketError("No authentication token found"));
+    return;
   }
 
   const onMessage = (data) => {
     // Normalize and handle received message for different server payload shapes
     try {
-      let payload = data
+      let payload = data;
       // Some servers wrap actual payload under 'data' or 'payload'
-      if (data && typeof data === 'object' && (data.data || data.payload)) {
-        payload = data.data || data.payload
+      if (data && typeof data === "object" && (data.data || data.payload)) {
+        payload = data.data || data.payload;
       }
 
-      const messageText = payload.message ?? payload.content ?? payload.text
-      const senderId = payload.sender_id ?? payload.sender ?? payload.from ?? payload.user_id
-      const senderName = payload.sender_name ?? payload.sender_name ?? payload.username ?? payload.user_name ?? payload.sender_full_name
-      const timestamp = payload.timestamp ?? payload.sent_at ?? payload.created_at ?? new Date().toISOString()
+      const messageText = payload.message ?? payload.content ?? payload.text;
+      const senderId =
+        payload.sender_id ?? payload.sender ?? payload.from ?? payload.user_id;
+      const senderName =
+        payload.sender_name ??
+        payload.sender_name ??
+        payload.username ??
+        payload.user_name ??
+        payload.sender_full_name;
+      const timestamp =
+        payload.timestamp ??
+        payload.sent_at ??
+        payload.created_at ??
+        new Date().toISOString();
 
       if (messageText && senderId) {
-        dispatch(addRealtimeMessage({
-          conversationId,
-          message: {
-            message: messageText,
-            sender_id: senderId,
-            sender_name: senderName,
-            timestamp
-          }
-        }))
+        dispatch(
+          addRealtimeMessage({
+            conversationId,
+            message: {
+              message: messageText,
+              sender_id: senderId,
+              sender_name: senderName,
+              timestamp,
+            },
+          })
+        );
       }
     } catch (err) {
-      console.error('Error normalizing websocket message:', err)
+      console.error("Error normalizing websocket message:", err);
     }
-  }
+  };
 
   const onConnection = (event) => {
-    if (event.type === 'connected') {
-      dispatch(setWebSocketConnected(true))
-      dispatch(setWebSocketError(null))
-    } else if (event.type === 'disconnected') {
-      dispatch(setWebSocketConnected(false))
-    } else if (event.type === 'error') {
-      dispatch(setWebSocketError('WebSocket connection failed'))
-      dispatch(setWebSocketConnected(false))
+    if (event.type === "connected") {
+      dispatch(setWebSocketConnected(true));
+      dispatch(setWebSocketError(null));
+    } else if (event.type === "disconnected") {
+      dispatch(setWebSocketConnected(false));
+    } else if (event.type === "error") {
+      dispatch(setWebSocketError("WebSocket connection failed"));
+      dispatch(setWebSocketConnected(false));
     }
-  }
+  };
 
-  wsManager.connect(conversationId, token, onMessage, onConnection)
-}
+  wsManager.connect(conversationId, token, onMessage, onConnection);
+};
 
 export const disconnectWebSocket = () => (dispatch) => {
-  wsManager.disconnect()
-  dispatch(setWebSocketConnected(false))
-}
+  wsManager.disconnect();
+  dispatch(setWebSocketConnected(false));
+};
 
 export const sendWebSocketMessage = (message) => (dispatch) => {
-  const sent = wsManager.sendMessage(message)
+  const sent = wsManager.sendMessage(message);
   if (!sent) {
-    dispatch(setWebSocketError('Failed to send message - WebSocket not connected'))
+    dispatch(
+      setWebSocketError("Failed to send message - WebSocket not connected")
+    );
   }
-  return sent
-}
+  return sent;
+};
 
 // Export WebSocket manager for direct access if needed
-export { wsManager }
+export { wsManager };
 
-export default messengerSlice.reducer
+export default messengerSlice.reducer;
