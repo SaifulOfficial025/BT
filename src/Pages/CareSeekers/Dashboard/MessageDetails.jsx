@@ -33,7 +33,7 @@ function MessageDetails() {
     const providerId = params?.providerId || params?.id || null;
     if (providerId) dispatch(fetchProviderDetails(providerId));
     return () => dispatch(clearProviderDetails());
-  }, [dispatch, params]);
+  }, [dispatch, params?.providerId, params?.id]); // Only depend on specific param values, not entire object
 
   return (
     <div className="flex min-h-screen bg-white font-sfpro">

@@ -1,19 +1,20 @@
 import { useState } from "react";
 import CareLogo from "../../../../public/CareLogo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   registerAndCreateProfile,
   saveStep,
 } from "../../../Redux/CareProviderAuth";
 
-function EmailPassword(handleBack) {
+function EmailPassword({ formData, updateFormData, handleBack }) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const dispatch = useDispatch();
   const providerState = useSelector((state) => state.careProvider) || null;
+  const navigate = useNavigate();
 
   const isValidEmail = (value) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value || "");
@@ -283,6 +284,8 @@ function EmailPassword(handleBack) {
       } else {
         const res = resultAction.payload;
         alert(res.message || "Account created");
+        // After successful signup, navigate to login page
+        navigate("/careproviders/login");
         // Optionally clear onboarding
         // dispatch(clearOnboarding())
       }

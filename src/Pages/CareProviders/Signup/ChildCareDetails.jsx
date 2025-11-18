@@ -76,7 +76,12 @@ function ChildCareDetails({
                           updateFormData("city", d.city || formData.city);
                           updateFormData(
                             "zipCode",
-                            d.zip_code || d.postcode || formData.zipCode
+                            d.zip_code ||
+                              d.postcode ||
+                              d.postal ||
+                              d.postal_code ||
+                              d.postalCode ||
+                              formData.zipCode
                           );
                           updateFormData(
                             "nationality",

@@ -1,9 +1,12 @@
 import React from "react";
 import Girl from "../../../../public/girl.svg";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from 'react-redux'
-import { registerAndPublish, saveStep, buildRegisterAndPublishPayload } from '../../../Redux/CareSeekerAuth'
-
+import { useDispatch } from "react-redux";
+import {
+  registerAndPublish,
+  saveStep,
+  buildRegisterAndPublishPayload,
+} from "../../../Redux/CareSeekerAuth";
 
 function CareProvidersNearYou() {
   const [showSubscribePopup, setShowSubscribePopup] = React.useState(false);
@@ -19,49 +22,72 @@ function CareProvidersNearYou() {
     confirmPassword: "",
   });
 
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const isValidEmail = (value) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value || "");
+
+  const isStrongPassword = (pw) =>
+    pw && /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(pw);
 
   const readOnboarding = () => {
     try {
-      const raw = localStorage.getItem('seeker_onboarding')
-      return raw ? JSON.parse(raw) : { steps: {}, preview: null }
-    } catch (e) { return { steps: {}, preview: null } }
-  }
+      const raw = localStorage.getItem("seeker_onboarding");
+      return raw ? JSON.parse(raw) : { steps: {}, preview: null };
+    } catch (e) {
+      void e;
+      return { steps: {}, preview: null };
+    }
+  };
 
   const handleRegister = async () => {
-    if (!signupForm.email || !signupForm.password || signupForm.password !== signupForm.confirmPassword || !signupForm.firstName || !signupForm.lastName) {
-      alert('Please provide first name, last name, valid email and matching passwords')
-      return
+    if (
+      !signupForm.email ||
+      !signupForm.password ||
+      signupForm.password !== signupForm.confirmPassword ||
+      !signupForm.firstName ||
+      !signupForm.lastName
+    ) {
+      alert(
+        "Please provide first name, last name, valid email and matching passwords"
+      );
+      return;
     }
 
-    const onboarding = readOnboarding()
-    
+    const onboarding = readOnboarding();
+
     const userCredentials = {
       firstName: signupForm.firstName,
       lastName: signupForm.lastName,
       email: signupForm.email,
-      password: signupForm.password
-    }
+      password: signupForm.password,
+    };
 
-    const payload = buildRegisterAndPublishPayload(onboarding.steps, userCredentials)
+    const payload = buildRegisterAndPublishPayload(
+      onboarding.steps,
+      userCredentials
+    );
 
     try {
-      const resAction = await dispatch(registerAndPublish(payload))
+      const resAction = await dispatch(registerAndPublish(payload));
       if (resAction.error) {
-        alert('Registration failed: ' + (resAction.payload || resAction.error.message))
+        alert(
+          "Registration failed: " +
+            (resAction.payload || resAction.error.message)
+        );
       } else {
         // Save registration result and redirect to login
-        dispatch(saveStep({ stepName: 'registered', data: resAction.payload }))
-        setShowPaymentPopup(false)
-        setShowSubscribePopup(false)
-        setShowSignupPopup(false)
-        navigate('/careseekers/login')
+        dispatch(saveStep({ stepName: "registered", data: resAction.payload }));
+        setShowPaymentPopup(false);
+        setShowSubscribePopup(false);
+        setShowSignupPopup(false);
+        navigate("/careseekers/login");
       }
     } catch (e) {
-      alert('Unexpected error: ' + e.message)
+      alert("Unexpected error: " + e.message);
     }
-  }
+  };
 
   const paymentDetails = {
     Free: { rate: 0, hours: 0, fee: 0, total: 0 },
@@ -81,10 +107,10 @@ function CareProvidersNearYou() {
               className="w-32 h-32 mx-auto mb-4"
             />
             <h2 className="text-xl font-semibold text-center text-gray-800 mb-1">
-              Sign Up to View Care Providers near you  
+              Sign Up to View Care Providers near you
             </h2>
             <p className="text-sm text-gray-500 text-center mb-6">
-              Kindly enter your details below to view care providers near you. 
+              Kindly enter your details below to view care providers near you.
             </p>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <input
@@ -124,6 +150,11 @@ function CareProvidersNearYou() {
               }
               className="w-full mb-3 p-3 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400"
             />
+            {!isStrongPassword(signupForm.password) && signupForm.password && (
+              <p className="text-sm text-red-500 mb-2">
+                Password must be at least 8 characters and include a number.
+              </p>
+            )}
             <input
               type="password"
               placeholder="Confirm Password"
@@ -136,27 +167,46 @@ function CareProvidersNearYou() {
               }
               className="w-full mb-6 p-3 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400"
             />
+            {signupForm.confirmPassword &&
+              signupForm.password !== signupForm.confirmPassword && (
+                <p className="text-sm text-red-500 mb-2">
+                  Passwords do not match.
+                </p>
+              )}
             <button
-              className="w-full bg-[#0093d1] text-white py-3 rounded-md font-semibold hover:bg-[#007bb0] transition"
+              className="w-full bg-[#0093d1] text-white py-3 rounded-md font-semibold hover:bg-[#007bb0] transition disabled:opacity-60"
               onClick={handleRegister}
+              disabled={
+                !signupForm.firstName ||
+                !signupForm.lastName ||
+                !isValidEmail(signupForm.email) ||
+                !isStrongPassword(signupForm.password) ||
+                signupForm.password !== signupForm.confirmPassword
+              }
             >
               Sign Up
             </button>
+            {!isValidEmail(signupForm.email) && signupForm.email && (
+              <p className="text-sm text-red-500 mt-2">
+                Please enter a valid email address.
+              </p>
+            )}
           </div>
         </div>
       )}
 
-
       {/* Main Content (Blurred when signup popup is active) */}
       <div
         className={`font-sfpro w-full bg-white min-h-screen transition ${
-          showSignupPopup || showSubscribePopup || showPaymentPopup ? "blur-sm pointer-events-none" : ""
+          showSignupPopup || showSubscribePopup || showPaymentPopup
+            ? "blur-sm pointer-events-none"
+            : ""
         }`}
       >
         {/* Header */}
         <div className="flex justify-between items-center px-8 pt-8">
           <h2 className="text-3xl font-semibold text-gray-800">
-            Care Providers near you 
+            Care Providers near you
           </h2>
           <div className="flex items-center">
             <span className="text-lg text-[#0093d1] font-bold">Step 8</span>
@@ -260,15 +310,15 @@ function CareProvidersNearYou() {
             </h2>
             <div className="grid grid-cols-3 gap-4 mt-6 w-full">
               {/* Free */}
-                <div
-                  className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center cursor-pointer hover:shadow-lg transition"
-                  onClick={() => {
-                      setSelectedPlan("Free");
-                      setShowSubscribePopup(false);
-                      localStorage.setItem("careProviderPlan", "Free");
-                      window.location.href = "/careseekers/dashboard/careproviders";
-                    }}
-                >
+              <div
+                className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center cursor-pointer hover:shadow-lg transition"
+                onClick={() => {
+                  setSelectedPlan("Free");
+                  setShowSubscribePopup(false);
+                  localStorage.setItem("careProviderPlan", "Free");
+                  window.location.href = "/careseekers/dashboard/careproviders";
+                }}
+              >
                 <div className="text-lg font-bold text-gray-800 mb-1">Free</div>
                 <div className="text-2xl font-bold text-gray-800 mb-1">
                   $00.00
@@ -357,9 +407,9 @@ function CareProvidersNearYou() {
               </div>
             </div>
             <Link to="/careseekers/dashboard/careproviders">
-            <button className="w-full bg-[#0093d1] text-white py-3 px-20 rounded-lg font-semibold text-lg mb-3 hover:bg-[#007bb0] transition">
-              Proceed to Payment
-            </button>
+              <button className="w-full bg-[#0093d1] text-white py-3 px-20 rounded-lg font-semibold text-lg mb-3 hover:bg-[#007bb0] transition">
+                Proceed to Payment
+              </button>
             </Link>
             <button
               className="w-full border border-[#0093d1] text-[#0093d1] py-3 rounded-lg font-semibold text-lg hover:bg-blue-50 transition"

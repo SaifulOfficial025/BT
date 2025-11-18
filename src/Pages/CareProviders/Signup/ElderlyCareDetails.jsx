@@ -379,7 +379,10 @@ function ElderlyCareDetails({
         </div>
 
         <button
+          type="button"
           onClick={() => {
+            console.debug &&
+              console.debug("ElderlyCareDetails: Save clicked", { formData });
             const trimmedFirst = (formData.firstName || "").trim();
             const trimmedLast = (formData.lastName || "").trim();
             const newErrors = {};
@@ -516,7 +519,19 @@ function ElderlyCareDetails({
             dispatch(
               saveStep({ stepName: "elderly_profile", data: flatProfile })
             );
-            handleNext();
+            console.debug &&
+              console.debug(
+                "ElderlyCareDetails: saved steps, calling handleNext",
+                { handleNextType: typeof handleNext }
+              );
+            if (typeof handleNext === "function") {
+              handleNext();
+            } else {
+              console.error(
+                "ElderlyCareDetails: handleNext is not a function",
+                handleNext
+              );
+            }
           }}
           className="w-full bg-[#0093d1] text-white text-lg font-medium py-3 rounded-md hover:bg-[#007bb0] transition mt-8"
         >

@@ -19,24 +19,29 @@ function Signup() {
   const [showLocationPopup, setShowLocationPopup] = useState(false);
 
   const updateFormData = (key, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
   const getCurrentStepNumber = () => {
     switch (currentStep) {
-      case "whyWantWork": return 1;
-      case "careCategory": return 2;
-      case "details": return 3;
-      case "emailPassword": return selectedCategory ? 4 : 3;
-      default: return 1;
+      case "whyWantWork":
+        return 1;
+      case "careCategory":
+        return 2;
+      case "details":
+        return 3;
+      case "emailPassword":
+        return selectedCategory ? 4 : 3;
+      default:
+        return 1;
     }
   };
 
   const handleWhyWantWorkNext = (reason) => {
-    updateFormData('reason', reason);
+    updateFormData("reason", reason);
     setCurrentStep("careCategory");
   };
 
@@ -46,6 +51,10 @@ function Signup() {
   };
 
   const handleDetailsNext = () => {
+    console.debug &&
+      console.debug(
+        "Signup: handleDetailsNext called - advancing to emailPassword"
+      );
     setCurrentStep("emailPassword");
   };
 
@@ -75,7 +84,7 @@ function Signup() {
             handleBack={handleBack}
           />
         );
-      
+
       case "careCategory":
         return (
           <CareCategory
@@ -86,7 +95,7 @@ function Signup() {
             handleBack={handleBack}
           />
         );
-      
+
       case "details":
         // Conditional rendering based on selected category
         switch (selectedCategory) {
@@ -137,7 +146,7 @@ function Signup() {
           default:
             return <div>Please select a category</div>;
         }
-      
+
       case "emailPassword":
         return (
           <EmailPassword
@@ -146,7 +155,7 @@ function Signup() {
             handleBack={handleBack}
           />
         );
-      
+
       default:
         return <div>Step not found</div>;
     }
@@ -155,11 +164,11 @@ function Signup() {
   return (
     <div className="flex min-h-screen bg-gray-50 font-sfpro">
       {/* Sidebar */}
-      <SidebarSignup 
-        activeStep={getCurrentStepNumber()} 
+      <SidebarSignup
+        activeStep={getCurrentStepNumber()}
         selectedCategory={selectedCategory}
       />
-      
+
       {/* Main content */}
       <div className="flex-1 ml-[440px] flex items-center justify-center p-4">
         {renderCurrentStep()}

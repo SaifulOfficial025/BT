@@ -159,7 +159,6 @@ function Message() {
     dispatch(fetchConversations());
   }, [dispatch]);
 
-  // If navigated with other_user_id (from ViewDetails), create/open conversation
   useEffect(() => {
     const otherUserId = location?.state?.other_user_id;
     if (!otherUserId) return;
@@ -179,8 +178,7 @@ function Message() {
     };
   }, [dispatch, location]);
 
-  // When a conversation is created, lastCreatedConversationId will be populated in the store.
-  // Open that conversation once it appears in conversations list.
+ 
   useEffect(() => {
     if (!lastCreatedConversationId) return;
 
@@ -326,27 +324,31 @@ function Message() {
     }
   }, [activityEnded, currentConversation, dispatch]);
 
-  // Handle conversation selection
+  // Handle conversation selection - ONLY run when conversation ID changes
   useEffect(() => {
-    if (currentConversation) {
-      // Load messages for the selected conversation
-      dispatch(fetchMessages(currentConversation.id));
-      dispatch(setActiveConversation(currentConversation.id));
+    if (!currentConversation) return;
 
-      // Connect WebSocket for real-time messaging
-      dispatch(connectWebSocket(currentConversation.id));
+    const conversationId = currentConversation.id;
+    const unreadCount = currentConversation.unread_count;
 
-      // Mark conversation as read
-      if (currentConversation.unread_count > 0) {
-        dispatch(markAsRead(currentConversation.id));
-      }
+    // Load messages for the selected conversation
+    dispatch(fetchMessages(conversationId));
+    dispatch(setActiveConversation(conversationId));
+
+    // Connect WebSocket for real-time messaging
+    dispatch(connectWebSocket(conversationId));
+
+    // Mark conversation as read
+    if (unreadCount > 0) {
+      dispatch(markAsRead(conversationId));
     }
 
     // Cleanup WebSocket on conversation change
     return () => {
       dispatch(disconnectWebSocket());
     };
-  }, [dispatch, currentConversation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, currentConversation?.id]); // Only depend on ID, not entire object
 
   // Message display processing (moved up before useEffect hooks)
   const convertMessageToDisplay = (message) => {
@@ -374,20 +376,38 @@ function Message() {
   const chatEndRef = useRef(null);
   // Track previous last message id to only scroll when the last message actually changes
   const prevLastMessageIdRef = useRef(null);
+  // Track if user is at bottom to determine if we should auto-scroll
+  const isUserAtBottomRef = useRef(true);
 
-  // When a conversation is selected, scroll to the bottom to show latest messages
+  // Check if user is at bottom of chat
+  const checkIfUserAtBottom = () => {
+    const chatBody = chatBodyRef.current;
+    if (!chatBody) return true;
+
+    const threshold = 100; // pixels from bottom to consider "at bottom"
+    const isAtBottom =
+      chatBody.scrollTop + chatBody.clientHeight >=
+      chatBody.scrollHeight - threshold;
+    isUserAtBottomRef.current = isAtBottom;
+    return isAtBottom;
+  };
+
+  // Handle manual scroll by user
+  const handleChatScroll = () => {
+    checkIfUserAtBottom();
+  };
   useEffect(() => {
     if (!currentConversation) return;
 
-    // Reset previous last message id when switching conversations
-    prevLastMessageIdRef.current =
-      displayMessages[displayMessages.length - 1]?.id ?? null;
+    // When switching conversations, always scroll to bottom and mark user as at bottom
+    isUserAtBottomRef.current = true;
 
+    // Scroll to bottom whenever conversation changes
     const end = chatEndRef.current;
     if (end && typeof end.scrollIntoView === "function") {
       requestAnimationFrame(() => {
         try {
-          end.scrollIntoView({ behavior: "auto", block: "end" });
+          end.scrollIntoView({ behavior: "smooth", block: "end" });
         } catch (err) {
           console.error(err);
         }
@@ -398,14 +418,37 @@ function Message() {
     if (el) {
       setTimeout(() => {
         el.scrollTop = el.scrollHeight;
-      }, 50);
+      }, 100);
     }
-  }, [
-    selectedIndex,
-    currentConversation,
-    currentConversation?.id,
-    displayMessages,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentConversation?.id]); // Only trigger on conversation ID change
+
+   useEffect(() => {
+    const lastMessageId =
+      displayMessages[displayMessages.length - 1]?.id ?? null;
+
+    const isNewLastMessage =
+      lastMessageId && lastMessageId !== prevLastMessageIdRef.current;
+
+    if (isNewLastMessage && isUserAtBottomRef.current) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    prevLastMessageIdRef.current = lastMessageId;
+  }, [displayMessages]);
+
+  useEffect(() => {
+    if (!currentConversation) return;
+
+    const timer = setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, );
+
+
+
 
   // Handle sending message
   // Scroll helper
@@ -433,6 +476,9 @@ function Message() {
     const messageContent = input.trim();
     // Clear input immediately for optimistic UX
     setInput("");
+
+    // When user sends a message, mark them as at bottom and scroll
+    isUserAtBottomRef.current = true;
 
     // Optimistically scroll to show the user's new message
     scrollToBottom({ behavior: "auto" });
@@ -493,16 +539,17 @@ function Message() {
 
   // Variables are now declared above in the useEffect section
 
+  // Auto-scroll when new messages arrive
   useEffect(() => {
     // Determine the id of the last message
     const lastMessageId =
       displayMessages[displayMessages.length - 1]?.id ?? null;
 
-    // Only scroll if the last message id changed
+    // Only scroll if the last message id changed AND user is at bottom
     const isNewLastMessage =
       lastMessageId && lastMessageId !== prevLastMessageIdRef.current;
 
-    if (isNewLastMessage) {
+    if (isNewLastMessage && isUserAtBottomRef.current) {
       const end = chatEndRef.current;
       if (end && typeof end.scrollIntoView === "function") {
         requestAnimationFrame(() => {
@@ -529,12 +576,12 @@ function Message() {
   return (
     <div className="flex h-screen bg-white overflow-hidden font-sfpro">
       <Sidebar active="Message" />
-      <div className="flex-1 font-sfpro md:ml-64 flex h-screen">
+      <div className="flex flex-1  md:ml-64" style={{ height: "100vh" }}>
         {/* Left: Messages List */}
         <div
           className={`${
-            showChatOnMobile ? "hidden" : "block"
-          } w-full md:w-[340px] border-r border-gray-100 bg-[#f3fafc] flex flex-col h-screen`}
+            showChatOnMobile ? "hidden" : "flex"
+          } flex-col w-full md:w-96 border-r border-gray-200 bg-[#f3fafc] h-screen`}
         >
           <div className="px-6 py-6 border-b border-gray-100">
             <div className="flex text-left">
@@ -556,18 +603,26 @@ function Message() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex-1 overflow-y-auto px-2 pt-2 pb-2">
+          <div className="flex-1 overflow-y-auto px-2 pt-2 pb-20 md:pb-2">
             {conversationsLoading ? (
               <div className="text-center text-gray-400 py-8">
                 Loading conversations...
               </div>
             ) : conversationsError ? (
-              <div className="text-center text-red-400 py-8">
-                Error loading conversations
+              <div className="text-center text-red-400 py-8 px-4">
+                <div className="mb-2">Error loading conversations</div>
+                <div className="text-xs">{conversationsError}</div>
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="text-center text-gray-400 py-8 px-4">
+                <div className="mb-2">No conversations yet</div>
+                <div className="text-xs">
+                  Start a conversation with a care provider
+                </div>
               </div>
             ) : filteredConversations.length === 0 ? (
-              <div className="text-center text-gray-400 py-8">
-                No conversations found
+              <div className="text-center text-gray-400 py-8 px-4">
+                No conversations match your search
               </div>
             ) : (
               filteredConversations.map((conversation) => {
@@ -619,8 +674,8 @@ function Message() {
         {/* Right: Chat Area */}
         <div
           className={`${
-            showChatOnMobile ? "block" : "hidden md:block"
-          } flex-1 flex flex-col bg-white h-screen overflow-hidden`}
+            showChatOnMobile ? "flex" : "hidden md:flex"
+          } flex-col flex-1 bg-white h-screen`}
         >
           {/* Chat Header - Fixed at top */}
           <div className="flex items-center px-8 py-6 border-b border-gray-100 bg-[#f3fafc] relative flex-shrink-0">
@@ -843,7 +898,8 @@ function Message() {
           {/* Chat Body */}
           <div
             ref={chatBodyRef}
-            className="flex-1 px-8 py-6 overflow-y-auto bg-white"
+            onScroll={handleChatScroll}
+            className="flex-1 overflow-y-auto px-8 py-6 bg-white"
           >
             {!currentConversation ? (
               <div className="flex items-center justify-center h-full text-gray-400">
@@ -930,7 +986,7 @@ function Message() {
             )}
           </div>
           {/* Chat Input - Fixed at bottom */}
-          <div className="px-8 py-6 border-t border-gray-100 bg-white flex items-center flex-shrink-0">
+          <div className="px-8 py-6 border-t border-gray-100 bg-white flex items-center flex-shrink-0 sticky bottom-0">
             <input
               type="text"
               value={input}
