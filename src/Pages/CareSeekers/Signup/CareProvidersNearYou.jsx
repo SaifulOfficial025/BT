@@ -7,6 +7,7 @@ import {
   saveStep,
   buildRegisterAndPublishPayload,
 } from "../../../Redux/CareSeekerAuth";
+import { useAuth } from "../../../Context/AuthContext";
 
 function CareProvidersNearYou() {
   const [showSubscribePopup, setShowSubscribePopup] = React.useState(false);
@@ -24,6 +25,7 @@ function CareProvidersNearYou() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const isValidEmail = (value) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value || "");
@@ -79,6 +81,16 @@ function CareProvidersNearYou() {
       } else {
         // Save registration result and redirect to login
         dispatch(saveStep({ stepName: "registered", data: resAction.payload }));
+
+        // Set user in AuthContext
+        if (resAction.payload?.user) {
+          setUser({
+            ...resAction.payload.user,
+            user_type: "seeker",
+            email: signupForm.email,
+          });
+        }
+
         setShowPaymentPopup(false);
         setShowSubscribePopup(false);
         setShowSignupPopup(false);

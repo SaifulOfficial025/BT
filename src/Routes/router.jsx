@@ -45,76 +45,161 @@ import MessageAdmin from "../Pages/Admin/Message";
 
 import BookingService from "../Pages/CareSeekers/BookingaService/Signup";
 
+// Import role protection components
+import RoleProtectedRoute from "../Components/RoleProtectedRoute";
+import PreventOtherLogin from "../Components/PreventOtherLogin";
+import AlreadyLoggedIn from "../Pages/AlreadyLoggedIn";
+
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
   },
   {
+    path: "/unauthorized",
+    element: <AlreadyLoggedIn />,
+  },
+  {
+    path: "/already-logged-in",
+    element: <AlreadyLoggedIn />,
+  },
+  {
     path: "/careseekers/dashboard/settings",
-    element: <Settings />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <Settings />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/verify-identity",
-    element: <VerifyIdentity />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <VerifyIdentity />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/personal-information",
-    element: <PersonalInformation />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <PersonalInformation />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/password",
-    element: <Password />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <Password />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/home",
-    element: <DashboardHome />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <DashboardHome />
+      </RoleProtectedRoute>
+    ),
+  },
+  {
+    path: "/careseekers/dashboard",
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <DashboardHome />
+      </RoleProtectedRoute>
+    ),
   },
 
   {
     path: "/careseekers/login",
-    element: <CareSeekerLoginPage />,
+    element: (
+      <PreventOtherLogin role="seeker">
+        <CareSeekerLoginPage />
+      </PreventOtherLogin>
+    ),
   },
   {
     path: "/careseekers",
-    element: <CareSeekerLoginPage />,
+    element: (
+      <PreventOtherLogin role="seeker">
+        <CareSeekerLoginPage />
+      </PreventOtherLogin>
+    ),
   },
 
   {
     path: "/careseekers/signup",
-    element: <CareSeekerSignupPage />,
+    element: (
+      <PreventOtherLogin role="seeker">
+        <CareSeekerSignupPage />
+      </PreventOtherLogin>
+    ),
   },
   {
     path: "/careproviders/login",
-    element: <CareProviderLoginPage />,
+    element: (
+      <PreventOtherLogin role="provider">
+        <CareProviderLoginPage />
+      </PreventOtherLogin>
+    ),
   },
   {
     path: "/careproviders/signup",
-    element: <CareProviderSignupPage />,
+    element: (
+      <PreventOtherLogin role="provider">
+        <CareProviderSignupPage />
+      </PreventOtherLogin>
+    ),
   },
   {
     path: "/careseekers/dashboard/careproviders",
-    element: <CareProvidersNearYouDashboard />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <CareProvidersNearYouDashboard />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/details/:id",
-    element: <ViewDetails />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <ViewDetails />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/requests",
-    element: <Requests />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <Requests />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/pending_details",
-    element: <PendingDetails />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <PendingDetails />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/pending_details/:id",
-    element: <PendingDetails />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <PendingDetails />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/message",
-    element: <Message />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <Message />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/payment-success",
@@ -122,72 +207,140 @@ export const router = createBrowserRouter([
   },
   {
     path: "/careseekers/dashboard/setting",
-    element: <Settings />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <Settings />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/message_provider/:id",
-    element: <MessageDetails />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <MessageDetails />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/dashboard/request_details/:id",
-    element: <RequestDetails />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <RequestDetails />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careseekers/bookservice",
-    element: <BookingService />,
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <BookingService />
+      </RoleProtectedRoute>
+    ),
+  },
+  {
+    path: "/careseekers/dashboard/summary",
+    element: (
+      <RoleProtectedRoute allowedRole="seeker">
+        <Summary />
+      </RoleProtectedRoute>
+    ),
   },
 
   {
     path: "/careproviders/dashboard",
-    element: <HomePage />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <HomePage />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/job_details",
-    element: <JobDetails />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <JobDetails />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/requests",
-    element: <RequestsProvider />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <RequestsProvider />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/request_details",
-    element: <RequestDetailsProvider />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <RequestDetailsProvider />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/request_details/:id",
-    element: <RequestDetailsProvider />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <RequestDetailsProvider />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/message",
-    element: <MessageProvider />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <MessageProvider />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/setting",
-    element: <SettingsProvider />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <SettingsProvider />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/verify_identity",
-    element: <VerifyIdentityProvider />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <VerifyIdentityProvider />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/personal_information",
-    element: <PersonalInformationProvider />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <PersonalInformationProvider />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/password",
-    element: <PasswordProvider />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <PasswordProvider />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/wallet",
-    element: <WalletProvider />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <WalletProvider />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/careproviders/dashboard/payment",
-    element: <Payment />,
-  },
-  {
-    path: "/careseekers/dashboard/summary",
-    element: <Summary />,
+    element: (
+      <RoleProtectedRoute allowedRole="provider">
+        <Payment />
+      </RoleProtectedRoute>
+    ),
   },
   {
     path: "/admin/login",

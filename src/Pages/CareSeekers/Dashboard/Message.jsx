@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import Sidebar from "./Sidebar";
-import { useLocation } from "react-router-dom";
 import {
   fetchConversations,
   fetchMessages,
@@ -12,16 +11,14 @@ import {
   connectWebSocket,
   disconnectWebSocket,
   clearSendMessageError,
-  clearCreatedConversationId,
-  createConversation,
 } from "../../../Redux/Messenger";
 import {
   initiateActivityPayment,
   clearPaymentState,
   clearActivityStarted,
   clearActivityEnded,
-  endActivity,
 } from "../../../Redux/StartActivity";
+import { endActivity, startActivity } from "../../../Redux/StartActivity";
 import { BASE_URL } from "../../../Redux/config";
 
 // Helper functions
@@ -72,8 +69,6 @@ const getCurrentUserId = () => {
 function Message() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const location = useLocation();
-  const inputRef = useRef(null);
 
   // Redux state
   const {
@@ -86,47 +81,42 @@ function Message() {
     wsConnected,
     sendingMessage,
     sendMessageError,
-    lastCreatedConversationId,
   } = useSelector((state) => state.messenger);
 
-  const {
-    initiatingPayment,
-    paymentError,
-    checkoutUrl,
-    activityStarted,
-    lastBookingId,
-  } = useSelector((state) => state.startActivity);
+  const { initiatingPayment, paymentError, checkoutUrl, activityStarted } =
+    useSelector((state) => state.startActivity);
 
   // Local state
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [selectedConversationId, setSelectedConversationId] = useState(null); // Track by ID to prevent shifting
   const [menuOpen, setMenuOpen] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [totalHours, setTotalHours] = useState(1);
+  // Mobile messenger toggle: when true on mobile we show the chat full-screen,
+  // otherwise show the conversations list. Also track whether viewport is mobile.
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // Handle conversation selection
   const handleConversationSelect = (index) => {
     setSelectedIndex(index);
-    const conversation = conversations[index];
-    if (conversation) {
-      setSelectedConversationId(conversation.id);
-    }
-    // on small screens, open chat view
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      setShowChatOnMobile(true);
-    }
   };
 
   // Get current conversation
   const currentConversation = conversations[selectedIndex] || null;
   const currentMessages = currentConversation
-    ? messagesByConversation[String(currentConversation.id)] ||
-      messagesByConversation[currentConversation.id] ||
-      []
+    ? messagesByConversation[currentConversation.id] || []
     : [];
 
   // Filter conversations by search
@@ -142,12 +132,14 @@ function Message() {
   );
 
   // Payment calculation (using current conversation's hourly rate or default)
-  const RATE_PER_HOUR = currentConversation?.hourly_rate || 13; // Default $13/hr
+  const RATE_PER_HOUR = currentConversation?.hourly_rate || 1; // Default $13/hr
+  // Allow user to edit rate per hour (numeric only)
+  const [perHourRate, setPerHourRate] = useState(RATE_PER_HOUR);
   const SERVICE_FEE = 7; // Fixed service fee
-  const calculatedTotal = RATE_PER_HOUR * totalHours + SERVICE_FEE;
+  const calculatedTotal = perHourRate * totalHours + SERVICE_FEE;
 
   const paymentDetails = {
-    rate: RATE_PER_HOUR,
+    rate: perHourRate,
     hours: totalHours,
     fee: SERVICE_FEE,
     total: calculatedTotal,
@@ -160,111 +152,18 @@ function Message() {
     currentConversation?.id ||
     12;
 
-  // Debug: Log conversations changes
+  // Keep local perHourRate in sync when conversation changes
   useEffect(() => {
-    console.log("Conversations array changed:", {
-      count: conversations.length,
-      conversations: conversations.map((c) => ({
-        id: c.id,
-        title: c.job_title,
-      })),
-      lastCreatedId: lastCreatedConversationId,
-    });
-  }, [conversations, lastCreatedConversationId]);
+    setPerHourRate(currentConversation?.hourly_rate ?? RATE_PER_HOUR);
+  }, [currentConversation, RATE_PER_HOUR]);
 
   // Load conversations on component mount
   useEffect(() => {
-    // Only fetch conversations if we don't have any existing ones
-    // This prevents overwriting newly created conversations
-    if (conversations.length === 0) {
-      dispatch(fetchConversations());
-    }
-  }, [dispatch, conversations.length]);
-
-  // Maintain correct selection when conversations array changes (e.g., after sending first message)
-  useEffect(() => {
-    if (selectedConversationId && conversations.length > 0) {
-      const correctIndex = conversations.findIndex(
-        (c) => c.id === selectedConversationId
-      );
-      if (correctIndex >= 0 && correctIndex !== selectedIndex) {
-        setSelectedIndex(correctIndex);
-      }
-    }
-  }, [conversations, selectedConversationId, selectedIndex]);
-
-  useEffect(() => {
-    const otherUserId = location?.state?.other_user_id;
-    if (!otherUserId) return;
-
-    console.log("Creating conversation with user ID:", otherUserId);
-    let mounted = true;
-    (async () => {
-      try {
-        const result = await dispatch(createConversation(otherUserId));
-        if (!mounted) return;
-        console.log("Conversation creation result:", result);
-      } catch (error) {
-        console.error("Failed to create/open conversation:", error);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [dispatch, location]);
-
-  // When a conversation is created, lastCreatedConversationId will be populated in the store.
-  // The conversation is now directly added to the conversations array by Redux.
-  // Open that conversation once it appears in conversations list.
-  useEffect(() => {
-    if (!lastCreatedConversationId) return;
-
-    console.log("Handling created conversation ID:", lastCreatedConversationId);
-    console.log(
-      "Current conversations:",
-      conversations.map((c) => ({ id: c.id, title: c.job_title }))
-    );
-
-    // Add a small delay to ensure the conversation is properly added to the array
-    const timeoutId = setTimeout(() => {
-      const cid = String(lastCreatedConversationId);
-      // Try to find the conversation index
-      const idx = conversations.findIndex((c) => String(c.id) === cid);
-      console.log("Found conversation at index:", idx);
-
-      if (idx >= 0) {
-        setSelectedIndex(idx);
-        setSelectedConversationId(lastCreatedConversationId);
-        dispatch(setActiveConversation(cid));
-        dispatch(fetchMessages(cid));
-        dispatch(connectWebSocket(cid));
-
-        // On mobile, show the chat view
-        if (typeof window !== "undefined" && window.innerWidth < 768) {
-          setShowChatOnMobile(true);
-        }
-
-        setTimeout(() => {
-          if (inputRef.current && typeof inputRef.current.focus === "function")
-            inputRef.current.focus();
-        }, 100);
-
-        // Clear the created conversation ID after handling it
-        setTimeout(() => {
-          dispatch(clearCreatedConversationId());
-        }, 2000); // Increased delay to prevent premature clearing
-      } else {
-        console.warn("Conversation not found in list yet, will retry...");
-        // If conversation not found, don't clear the ID yet so this effect can retry
-      }
-    }, 500); // Wait 500ms for conversation to be properly added
-
-    return () => clearTimeout(timeoutId);
-  }, [lastCreatedConversationId, conversations, dispatch]);
+    dispatch(fetchConversations());
+  }, [dispatch]);
 
   // When returning from Stripe, lastBookingId will be set in the store via setActivityStarted.
-  // Open the conversation that matches that booking id so the activity-started message appears in the right chat.
+  const { lastBookingId } = useSelector((state) => state.startActivity);
   useEffect(() => {
     if (!lastBookingId) return;
     const bid = String(lastBookingId);
@@ -277,7 +176,6 @@ function Message() {
     if (idx >= 0) {
       const conv = conversations[idx];
       setSelectedIndex(idx);
-      setSelectedConversationId(conv.id);
       dispatch(setActiveConversation(String(conv.id)));
       dispatch(fetchMessages(String(conv.id)));
       dispatch(connectWebSocket(String(conv.id)));
@@ -286,21 +184,30 @@ function Message() {
           inputRef.current.focus();
       }, 100);
     } else if (conversations.length > 0) {
-      // Instead of fetching all conversations again (which might remove newly created ones),
-      // just log that the booking wasn't found in current conversations
-      console.log(`Booking ID ${bid} not found in current conversations`);
-      // Set to first conversation as fallback
-      if (conversations.length > 0) {
-        setSelectedIndex(0);
-        setSelectedConversationId(conversations[0].id);
-        dispatch(setActiveConversation(String(conversations[0].id)));
-        dispatch(fetchMessages(String(conversations[0].id)));
-        dispatch(connectWebSocket(String(conversations[0].id)));
-        setTimeout(() => {
-          if (inputRef.current && typeof inputRef.current.focus === "function")
-            inputRef.current.focus();
-        }, 100);
-      }
+      (async () => {
+        const convRes = await dispatch(fetchConversations());
+        const convs = convRes.payload || [];
+        const idx2 = convs.findIndex(
+          (c) =>
+            String(c.booking) === bid ||
+            String(c.booking_id) === bid ||
+            String(c.id) === bid
+        );
+        if (idx2 >= 0) {
+          const conv = convs[idx2];
+          setSelectedIndex(idx2);
+          dispatch(setActiveConversation(String(conv.id)));
+          dispatch(fetchMessages(String(conv.id)));
+          dispatch(connectWebSocket(String(conv.id)));
+          setTimeout(() => {
+            if (
+              inputRef.current &&
+              typeof inputRef.current.focus === "function"
+            )
+              inputRef.current.focus();
+          }, 100);
+        }
+      })();
     }
   }, [lastBookingId, conversations, dispatch]);
 
@@ -315,34 +222,49 @@ function Message() {
   // Redirect to Stripe checkout when URL is received
   useEffect(() => {
     if (checkoutUrl) {
-      // Redirect to Stripe checkout
-      window.location.href = checkoutUrl;
+      // Open Stripe checkout in a new tab/window to keep app open
+      try {
+        window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+      } catch {
+        // fallback to same-tab redirect
+        window.location.href = checkoutUrl;
+      }
+      // Close the payment modal since checkout opened in a new tab
+      try {
+        setShowPayment(false);
+      } catch {
+        // ignore if state setter not available (shouldn't happen)
+      }
     }
   }, [checkoutUrl]);
 
   // Stripe return handling is performed by the PaymentSuccessRedirect route component
 
   // Send "Activity has started" message when activity is confirmed
+  const activityStartedSentForRef = useRef(null);
+
   useEffect(() => {
-    if (activityStarted && currentConversation) {
-      // Send system message to chat
-      const activityMessage = "Activity has started";
-      dispatch(
-        sendMessage({
-          conversationId: currentConversation.id,
-          content: activityMessage,
-        })
-      );
+    if (!activityStarted || !currentConversation) return;
 
-      // Clear the activity started flag after sending message
-      setTimeout(() => {
-        dispatch(clearPaymentState());
-        dispatch(clearActivityStarted());
-      }, 1000);
-    }
+    const convId = String(currentConversation.id);
 
-    // When activity is ended, send a system message too
-    // We'll read activityEnded from the store via selector below
+    // If we've already sent the activity-started message for this conversation, skip
+    if (activityStartedSentForRef.current === convId) return;
+
+    activityStartedSentForRef.current = convId;
+
+    // Send system message to chat exactly once per conversation/booking
+    const activityMessage = "Activity has started";
+    dispatch(
+      sendMessage({
+        conversationId: currentConversation.id,
+        content: activityMessage,
+      })
+    );
+
+    // Clear the activity started flag and payment state immediately to avoid re-trigger
+    dispatch(clearPaymentState());
+    dispatch(clearActivityStarted());
   }, [activityStarted, currentConversation, dispatch]);
 
   // Watch for activityEnded flag and send system message
@@ -362,31 +284,27 @@ function Message() {
     }
   }, [activityEnded, currentConversation, dispatch]);
 
-  // Handle conversation selection - ONLY run when conversation ID changes
+  // Handle conversation selection
   useEffect(() => {
-    if (!currentConversation) return;
+    if (currentConversation) {
+      // Load messages for the selected conversation
+      dispatch(fetchMessages(currentConversation.id));
+      dispatch(setActiveConversation(currentConversation.id));
 
-    const conversationId = currentConversation.id;
-    const unreadCount = currentConversation.unread_count;
+      // Connect WebSocket for real-time messaging
+      dispatch(connectWebSocket(currentConversation.id));
 
-    // Load messages for the selected conversation
-    dispatch(fetchMessages(conversationId));
-    dispatch(setActiveConversation(conversationId));
-
-    // Connect WebSocket for real-time messaging
-    dispatch(connectWebSocket(conversationId));
-
-    // Mark conversation as read
-    if (unreadCount > 0) {
-      dispatch(markAsRead(conversationId));
+      // Mark conversation as read
+      if (currentConversation.unread_count > 0) {
+        dispatch(markAsRead(currentConversation.id));
+      }
     }
 
     // Cleanup WebSocket on conversation change
     return () => {
       dispatch(disconnectWebSocket());
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, currentConversation?.id]); // Only depend on ID, not entire object
+  }, [dispatch, currentConversation]);
 
   // Message display processing (moved up before useEffect hooks)
   const convertMessageToDisplay = (message) => {
@@ -412,40 +330,23 @@ function Message() {
   // Auto-scroll refs
   const chatBodyRef = useRef(null);
   const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
   // Track previous last message id to only scroll when the last message actually changes
   const prevLastMessageIdRef = useRef(null);
-  // Track if user is at bottom to determine if we should auto-scroll
-  const isUserAtBottomRef = useRef(true);
 
-  // Check if user is at bottom of chat
-  const checkIfUserAtBottom = () => {
-    const chatBody = chatBodyRef.current;
-    if (!chatBody) return true;
-
-    const threshold = 100; // pixels from bottom to consider "at bottom"
-    const isAtBottom =
-      chatBody.scrollTop + chatBody.clientHeight >=
-      chatBody.scrollHeight - threshold;
-    isUserAtBottomRef.current = isAtBottom;
-    return isAtBottom;
-  };
-
-  // Handle manual scroll by user
-  const handleChatScroll = () => {
-    checkIfUserAtBottom();
-  };
+  // When a conversation is selected, scroll to the bottom to show latest messages
   useEffect(() => {
     if (!currentConversation) return;
 
-    // When switching conversations, always scroll to bottom and mark user as at bottom
-    isUserAtBottomRef.current = true;
+    // Reset previous last message id when switching conversations
+    prevLastMessageIdRef.current =
+      displayMessages[displayMessages.length - 1]?.id ?? null;
 
-    // Scroll to bottom whenever conversation changes
     const end = chatEndRef.current;
     if (end && typeof end.scrollIntoView === "function") {
       requestAnimationFrame(() => {
         try {
-          end.scrollIntoView({ behavior: "smooth", block: "end" });
+          end.scrollIntoView({ behavior: "auto", block: "end" });
         } catch (err) {
           console.error(err);
         }
@@ -456,34 +357,14 @@ function Message() {
     if (el) {
       setTimeout(() => {
         el.scrollTop = el.scrollHeight;
-      }, 100);
+      }, 50);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentConversation?.id]); // Only trigger on conversation ID change
-
-  useEffect(() => {
-    const lastMessageId =
-      displayMessages[displayMessages.length - 1]?.id ?? null;
-
-    const isNewLastMessage =
-      lastMessageId && lastMessageId !== prevLastMessageIdRef.current;
-
-    if (isNewLastMessage && isUserAtBottomRef.current) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-
-    prevLastMessageIdRef.current = lastMessageId;
-  }, [displayMessages]);
-
-  useEffect(() => {
-    if (!currentConversation) return;
-
-    const timer = setTimeout(() => {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 300);
-
-    return () => clearTimeout(timer);
-  });
+  }, [
+    selectedIndex,
+    currentConversation,
+    currentConversation?.id,
+    displayMessages,
+  ]);
 
   // Handle sending message
   // Scroll helper
@@ -511,9 +392,6 @@ function Message() {
     const messageContent = input.trim();
     // Clear input immediately for optimistic UX
     setInput("");
-
-    // When user sends a message, mark them as at bottom and scroll
-    isUserAtBottomRef.current = true;
 
     // Optimistically scroll to show the user's new message
     scrollToBottom({ behavior: "auto" });
@@ -557,6 +435,7 @@ function Message() {
           bookingId,
           totalHours,
           paymentGateway: "stripe",
+          perHourRate: RATE_PER_HOUR,
         })
       );
 
@@ -574,17 +453,16 @@ function Message() {
 
   // Variables are now declared above in the useEffect section
 
-  // Auto-scroll when new messages arrive
   useEffect(() => {
     // Determine the id of the last message
     const lastMessageId =
       displayMessages[displayMessages.length - 1]?.id ?? null;
 
-    // Only scroll if the last message id changed AND user is at bottom
+    // Only scroll if the last message id changed
     const isNewLastMessage =
       lastMessageId && lastMessageId !== prevLastMessageIdRef.current;
 
-    if (isNewLastMessage && isUserAtBottomRef.current) {
+    if (isNewLastMessage) {
       const end = chatEndRef.current;
       if (end && typeof end.scrollIntoView === "function") {
         requestAnimationFrame(() => {
@@ -611,129 +489,131 @@ function Message() {
   return (
     <div className="flex h-screen bg-white overflow-hidden font-sfpro">
       <Sidebar active="Message" />
-      <div className="flex flex-1  md:ml-64" style={{ height: "100vh" }}>
-        {/* Left: Messages List */}
+      <div className="flex-1 font-sfpro md:ml-64 flex h-screen">
+        {/* Left: Messages List (hidden on mobile when chat is open) */}
+        {(!isMobile || !showChatOnMobile) && (
+          <div className="w-[340px] border-r border-gray-100 bg-[#f3fafc] flex flex-col h-screen">
+            <div className="px-6 py-6 border-b border-gray-100">
+              <div className="flex text-left">
+                <button
+                  className="-mt-4 mr-4 text-gray-500 hover:text-[#0d99c9] text-xl"
+                  onClick={() => navigate(-1)}
+                >
+                  &#8592;
+                </button>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Messages
+                </h2>
+              </div>
+              <input
+                type="text"
+                placeholder="Search messages"
+                className="w-full px-4 py-2 rounded-md border border-gray-200 bg-white text-gray-700 text-sm focus:outline-none"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto px-2 pt-2 pb-2">
+              {conversationsLoading ? (
+                <div className="text-center text-gray-400 py-8">
+                  Loading conversations...
+                </div>
+              ) : conversationsError ? (
+                <div className="text-center text-red-400 py-8">
+                  Error loading conversations
+                </div>
+              ) : filteredConversations.length === 0 ? (
+                <div className="text-center text-gray-400 py-8">
+                  No conversations found
+                </div>
+              ) : (
+                filteredConversations.map((conversation) => {
+                  const originalIndex = conversations.indexOf(conversation);
+                  return (
+                    <button
+                      key={conversation.id}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-left mb-1 hover:bg-[#c5c7ca] focus:outline-none ${
+                        selectedIndex === originalIndex ? "bg-[#c5c7ca]" : ""
+                      }`}
+                      onClick={() => {
+                        handleConversationSelect(originalIndex);
+                        // On mobile, open the chat pane after selecting a conversation
+                        if (isMobile) setShowChatOnMobile(true);
+                      }}
+                    >
+                      <img
+                        src={resolveImage(
+                          conversation.other_participant?.profile_image_url
+                        )}
+                        alt="avatar"
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-800 text-base">
+                          {conversation.other_participant?.full_name ||
+                            conversation.other_participant?.email ||
+                            "Unknown User"}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {conversation.last_message?.content ||
+                            "No messages yet"}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-xs text-gray-400">
+                          {conversation.last_message?.timestamp
+                            ? formatTime(conversation.last_message.timestamp)
+                            : ""}
+                        </span>
+                        {conversation.unread_count > 0 && (
+                          <span className="bg-[#0d99c9] text-white text-xs rounded-full px-2 py-1 mt-1">
+                            {conversation.unread_count}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+        {/* Right: Chat Area (hidden on mobile until a conversation is selected) */}
         <div
-          className={`${
-            showChatOnMobile ? "hidden" : "flex"
-          } flex-col w-full md:w-96 border-r border-gray-200 bg-[#f3fafc] h-screen`}
+          className={`flex-1 flex flex-col bg-white h-screen overflow-hidden ${
+            isMobile && !showChatOnMobile ? "hidden" : ""
+          }`}
         >
-          <div className="px-6 py-6 border-b border-gray-100">
-            <div className="flex text-left">
+          {/* Chat Header - Fixed at top */}
+          <div className="flex items-center px-6 sm:px-8 py-4 sm:py-6 border-b border-gray-100 bg-[#f3fafc] relative flex-shrink-0">
+            {/* Back to list on mobile */}
+            {isMobile && (
               <button
-                className="-mt-4 mr-4 text-gray-500 hover:text-[#0d99c9] text-xl"
-                onClick={() => navigate(-1)}
+                className="-ml-2 mr-3 text-gray-600 hover:text-gray-800 text-xl"
+                onClick={() => setShowChatOnMobile(false)}
+                aria-label="Back to conversations"
               >
                 &#8592;
               </button>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Messages
-              </h2>
-            </div>
-            <input
-              type="text"
-              placeholder="Search messages"
-              className="w-full px-4 py-2 rounded-md border border-gray-200 bg-white text-gray-700 text-sm focus:outline-none"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto px-2 pt-2 pb-20 md:pb-2">
-            {conversationsLoading ? (
-              <div className="text-center text-gray-400 py-8">
-                Loading conversations...
-              </div>
-            ) : conversationsError ? (
-              <div className="text-center text-red-400 py-8 px-4">
-                <div className="mb-2">Error loading conversations</div>
-                <div className="text-xs">{conversationsError}</div>
-              </div>
-            ) : conversations.length === 0 ? (
-              <div className="text-center text-gray-400 py-8 px-4">
-                <div className="mb-2">No conversations yet</div>
-                <div className="text-xs">
-                  Start a conversation with a care provider
-                </div>
-              </div>
-            ) : filteredConversations.length === 0 ? (
-              <div className="text-center text-gray-400 py-8 px-4">
-                No conversations match your search
-              </div>
-            ) : (
-              filteredConversations.map((conversation) => {
-                const originalIndex = conversations.indexOf(conversation);
-                return (
-                  <button
-                    key={conversation.id}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-left mb-1 hover:bg-[#c5c7ca] focus:outline-none ${
-                      selectedIndex === originalIndex ? "bg-[#c5c7ca]" : ""
-                    }`}
-                    onClick={() => handleConversationSelect(originalIndex)}
-                  >
-                    <img
-                      src={resolveImage(
-                        conversation.other_participant?.profile_image_url
-                      )}
-                      alt="avatar"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-800 text-base">
-                        {conversation.other_participant?.full_name ||
-                          conversation.other_participant?.email ||
-                          "Unknown User"}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {conversation.last_message?.content ||
-                          "No messages yet"}
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="text-xs text-gray-400">
-                        {conversation.last_message?.timestamp
-                          ? formatTime(conversation.last_message.timestamp)
-                          : ""}
-                      </span>
-                      {conversation.unread_count > 0 && (
-                        <span className="bg-[#0d99c9] text-white text-xs rounded-full px-2 py-1 mt-1">
-                          {conversation.unread_count}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })
             )}
-          </div>
-        </div>
-        {/* Right: Chat Area */}
-        <div
-          className={`${
-            showChatOnMobile ? "flex" : "hidden md:flex"
-          } flex-col flex-1 bg-white h-screen`}
-        >
-          {/* Chat Header - Fixed at top */}
-          <div className="flex items-center px-8 py-6 border-b border-gray-100 bg-[#f3fafc] relative flex-shrink-0">
-            {/* Mobile back to list */}
-            <button
-              className="md:hidden mr-3 text-gray-500"
-              onClick={() => setShowChatOnMobile(false)}
-            >
-              ←
-            </button>
             {currentConversation ? (
               <>
                 <div
                   className="flex items-center flex-1 cursor-pointer hover:opacity-80 transition"
                   onClick={() => {
-                    const fullName =
-                      currentConversation.other_participant?.full_name;
-                    // Don't navigate if it's Support Admin
-                    if (fullName === "Support Admin") return;
-
+                    const name =
+                      currentConversation.other_participant?.full_name || "";
+                    // Do not navigate for support/admin system users
+                    if (
+                      typeof name === "string" &&
+                      name.trim().toLowerCase() === "support admin"
+                    ) {
+                      return;
+                    }
                     const providerId =
                       currentConversation.other_participant?.id ||
-                      currentConversation.provider_id;
+                      currentConversation.provider_id ||
+                      currentConversation.other_user_id;
                     if (providerId) {
                       navigate(`/careseekers/dashboard/details/${providerId}`);
                     }
@@ -796,7 +676,14 @@ function Message() {
                   <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                     <button
                       className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 text-sm"
-                      onClick={async () => {
+                      onClick={() => {
+                        // Trigger start-activity API in background, then open payment modal
+                        try {
+                          if (bookingId)
+                            dispatch(startActivity(String(bookingId)));
+                        } catch (e) {
+                          console.error("Failed to start activity:", e);
+                        }
                         setMenuOpen(false);
                         setShowPayment(true);
                       }}
@@ -806,7 +693,6 @@ function Message() {
                     <button
                       className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 text-sm"
                       onClick={async () => {
-                        // End activity: use bookingId resolved for this conversation
                         setMenuOpen(false);
                         try {
                           const res = await dispatch(endActivity(bookingId));
@@ -856,12 +742,26 @@ function Message() {
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-gray-500">Rate per hour</span>
                         <span className="text-gray-800 font-semibold">
-                          ${paymentDetails.rate}
+                          {/* ${paymentDetails.rate} */}
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            step="0.01"
+                            min="0"
+                            className="bg-white border border-gray-300 rounded w-20 px-2 py-1 text-gray-800 font-semibold text-right"
+                            value={perHourRate}
+                            onChange={(e) =>
+                              setPerHourRate(
+                                Math.max(0, parseFloat(e.target.value) || 0)
+                              )
+                            }
+                          />
                         </span>
                       </div>
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-gray-500">Total hours</span>
                         <input
+                          className="bg-white border border-gray-300 rounded w-20 px-2 py-1 text-gray-800 font-semibold text-right"
                           type="number"
                           min="1"
                           value={totalHours}
@@ -870,7 +770,6 @@ function Message() {
                               Math.max(1, parseInt(e.target.value) || 1)
                             )
                           }
-                          className="w-20 px-2 py-1 border border-gray-300 rounded text-gray-800 font-semibold text-right dark:bg-white"
                         />
                       </div>
                       <div className="flex justify-between items-center mb-3">
@@ -901,7 +800,7 @@ function Message() {
                     >
                       {initiatingPayment
                         ? "Processing..."
-                        : "Proceed to Payment"}
+                        : "Proceed to Payment for Activity"}
                     </button>
                     <button
                       className="w-full border border-[#0d99c9] text-[#0d99c9] py-3 rounded-md font-semibold bg-white hover:bg-[#f7fafd] transition"
@@ -950,8 +849,7 @@ function Message() {
           {/* Chat Body */}
           <div
             ref={chatBodyRef}
-            onScroll={handleChatScroll}
-            className="flex-1 overflow-y-auto px-8 py-6 bg-white"
+            className="flex-1 px-8 py-6 overflow-y-auto bg-white"
           >
             {!currentConversation ? (
               <div className="flex items-center justify-center h-full text-gray-400">
@@ -983,7 +881,7 @@ function Message() {
                 {displayMessages.map((msg, i) => (
                   <div key={i} className="mb-4">
                     {msg.type === "received" && (
-                      <div className="flex flex-col max-w-[85%] md:max-w-[60%] items-start">
+                      <div className="flex flex-col max-w-[60%] items-start">
                         <span className="text-xs text-gray-500 font-semibold mb-1">
                           {msg.senderName ||
                             currentConversation.other_participant?.full_name ||
@@ -998,7 +896,7 @@ function Message() {
                       </div>
                     )}
                     {msg.type === "sent" && (
-                      <div className="flex flex-col max-w-[85%] md:max-w-[60%] items-end ml-auto">
+                      <div className="flex flex-col max-w-[60%] items-end ml-auto">
                         <span className="text-xs text-gray-500 font-semibold mb-1">
                           You
                         </span>
@@ -1012,7 +910,7 @@ function Message() {
                     )}
                     {msg.type === "info" && (
                       <div className="flex justify-end">
-                        <div className="bg-[#f5f5f5] rounded-2xl px-6 py-4 min-w-[220px] md:min-w-[220px] max-w-[85%] md:max-w-[320px] flex flex-col items-start shadow-sm">
+                        <div className="bg-[#f5f5f5] rounded-2xl px-6 py-4 min-w-[220px] max-w-[320px] flex flex-col items-start shadow-sm">
                           <span className="text-[#0d99c9] text-md font-medium mb-2">
                             {msg.text}
                           </span>
@@ -1038,7 +936,7 @@ function Message() {
             )}
           </div>
           {/* Chat Input - Fixed at bottom */}
-          <div className="px-8 py-6 border-t border-gray-100 bg-white flex items-center flex-shrink-0 sticky bottom-0">
+          <div className="px-8 py-6 border-t border-gray-100 bg-white flex items-center flex-shrink-0">
             <input
               type="text"
               value={input}
@@ -1050,7 +948,6 @@ function Message() {
                   : "Select a conversation first"
               }
               disabled={!currentConversation || sendingMessage}
-              ref={inputRef}
               className="flex-1 px-4 py-3 rounded-md border border-gray-200 bg-[#f7fafd] text-gray-700 text-sm focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button

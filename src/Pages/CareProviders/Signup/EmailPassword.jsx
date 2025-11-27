@@ -6,6 +6,7 @@ import {
   registerAndCreateProfile,
   saveStep,
 } from "../../../Redux/CareProviderAuth";
+import { useAuth } from "../../../Context/AuthContext";
 
 function EmailPassword({ formData, updateFormData, handleBack }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +16,7 @@ function EmailPassword({ formData, updateFormData, handleBack }) {
   const dispatch = useDispatch();
   const providerState = useSelector((state) => state.careProvider) || null;
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const isValidEmail = (value) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value || "");
@@ -284,6 +286,15 @@ function EmailPassword({ formData, updateFormData, handleBack }) {
       } else {
         const res = resultAction.payload;
         alert(res.message || "Account created");
+
+        // Set user in AuthContext
+        if (res?.user) {
+          setUser({
+            ...res.user,
+            user_type: "provider",
+            email: email,
+          });
+        }
 
         navigate("/careproviders/dashboard");
         // Optionally clear onboarding

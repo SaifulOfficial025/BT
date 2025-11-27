@@ -18,17 +18,8 @@ import {
   clearActivityStarted,
   clearActivityEnded,
 } from "../../../Redux/StartActivity";
-import { endActivity } from "../../../Redux/StartActivity";
+import { endActivity, startActivity } from "../../../Redux/StartActivity";
 import { BASE_URL } from "../../../Redux/config";
-
-// Helper functions
-const resolveImage = (url) => {
-  if (!url)
-    return "https://ui-avatars.com/api/?name=User&background=E5E7EB&color=374151&size=64";
-  if (url.startsWith("http") || url.startsWith("https")) return url;
-  if (url.startsWith("/")) return `${BASE_URL}${url}`;
-  return url;
-};
 
 const formatTime = (timestamp) => {
   const date = new Date(timestamp);
@@ -37,6 +28,15 @@ const formatTime = (timestamp) => {
     minute: "2-digit",
     hour12: true,
   });
+};
+
+// Helper to resolve image URLs (absolute, relative or missing)
+const resolveImage = (url) => {
+  if (!url)
+    return "https://ui-avatars.com/api/?name=User&background=E5E7EB&color=374151&size=64";
+  if (url.startsWith("http") || url.startsWith("https")) return url;
+  if (url.startsWith("/")) return `${BASE_URL}${url}`;
+  return url;
 };
 
 const formatDate = (timestamp) => {
@@ -132,7 +132,7 @@ function Message() {
   );
 
   // Payment calculation (using current conversation's hourly rate or default)
-  const RATE_PER_HOUR = currentConversation?.hourly_rate || 13; // Default $13/hr
+  const RATE_PER_HOUR = currentConversation?.hourly_rate || 1; // Default $13/hr
   const SERVICE_FEE = 7; // Fixed service fee
   const calculatedTotal = RATE_PER_HOUR * totalHours + SERVICE_FEE;
 
@@ -215,31 +215,47 @@ function Message() {
   // Redirect to Stripe checkout when URL is received
   useEffect(() => {
     if (checkoutUrl) {
-      // Redirect to Stripe checkout
-      window.location.href = checkoutUrl;
+      // Open Stripe checkout in a new tab/window to keep app open
+      try {
+        window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+      } catch {
+        // fallback to same-tab redirect
+        window.location.href = checkoutUrl;
+      }
+      // Close the payment modal since checkout opened in a new tab
+      try {
+        setShowPayment(false);
+      } catch {
+        // ignore if state setter not available (shouldn't happen)
+      }
     }
   }, [checkoutUrl]);
 
   // Stripe return handling is performed by the PaymentSuccessRedirect route component
 
   // Send "Activity has started" message when activity is confirmed
-  useEffect(() => {
-    if (activityStarted && currentConversation) {
-      // Send system message to chat
-      const activityMessage = "Activity has started";
-      dispatch(
-        sendMessage({
-          conversationId: currentConversation.id,
-          content: activityMessage,
-        })
-      );
+  const activityStartedSentForRef = useRef(null);
 
-      // Clear the activity started flag after sending message
-      setTimeout(() => {
-        dispatch(clearPaymentState());
-        dispatch(clearActivityStarted());
-      }, 1000);
-    }
+  useEffect(() => {
+    if (!activityStarted || !currentConversation) return;
+
+    const convId = String(currentConversation.id);
+
+    if (activityStartedSentForRef.current === convId) return;
+
+    activityStartedSentForRef.current = convId;
+
+    const activityMessage = "Activity has started";
+    dispatch(
+      sendMessage({
+        conversationId: currentConversation.id,
+        content: activityMessage,
+      })
+    );
+
+    // Clear flags immediately to avoid re-triggering
+    dispatch(clearPaymentState());
+    dispatch(clearActivityStarted());
   }, [activityStarted, currentConversation, dispatch]);
 
   // Watch for activityEnded flag and send system message
@@ -410,6 +426,7 @@ function Message() {
           bookingId,
           totalHours,
           paymentGateway: "stripe",
+          perHourRate: RATE_PER_HOUR,
         })
       );
 
@@ -609,7 +626,7 @@ function Message() {
             </div>
             {currentConversation?.booking ? (
               <div className="ml-4 relative">
-                <button
+                {/* <button
                   className="text-gray-400 hover:text-gray-600 focus:outline-none"
                   onClick={() => setMenuOpen((v) => !v)}
                 >
@@ -623,12 +640,19 @@ function Message() {
                     <circle cx="12" cy="12" r="2" />
                     <circle cx="12" cy="18" r="2" />
                   </svg>
-                </button>
+                </button> */}
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                     <button
                       className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-100 text-sm"
                       onClick={() => {
+                        // Trigger start-activity API in background, then open payment modal
+                        try {
+                          if (bookingId)
+                            dispatch(startActivity(String(bookingId)));
+                        } catch (e) {
+                          console.error("Failed to start activity:", e);
+                        }
                         setMenuOpen(false);
                         setShowPayment(true);
                       }}
@@ -687,12 +711,20 @@ function Message() {
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-gray-500">Rate per hour</span>
                         <span className="text-gray-800 font-semibold">
-                          ${paymentDetails.rate}
+                          {/* ${paymentDetails.rate} */}
+                          <input
+                            type="number"
+                            className="bg-white border border-gray-300 rounded w-20 px-2 py-1 text-gray-800 font-semibold text-right"
+                            min="1"
+                            value={paymentDetails.rate}
+                            onChange={() => {}}
+                          />
                         </span>
                       </div>
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-gray-500">Total hours</span>
                         <input
+                          className="bg-white border border-gray-300 rounded w-20 px-2 py-1 text-gray-800 font-semibold text-right"
                           type="number"
                           min="1"
                           value={totalHours}
@@ -701,7 +733,6 @@ function Message() {
                               Math.max(1, parseInt(e.target.value) || 1)
                             )
                           }
-                          className="w-20 px-2 py-1 border border-gray-300 rounded text-gray-800 font-semibold text-right"
                         />
                       </div>
                       <div className="flex justify-between items-center mb-3">

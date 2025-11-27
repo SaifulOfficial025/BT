@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginUser, logout } from "../../Redux/Login";
 import formatAuthError from "../../utils/formatAuthError";
+import { useAuth } from "../../Context/AuthContext";
 
 function LoginPage(handleBack) {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,18 +13,23 @@ function LoginPage(handleBack) {
   const [error, setError] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const result = await dispatch(loginUser({ email, password }));
     if (result && result.payload && result.payload.access) {
       // success - ensure user has the correct role
-      const userType =
-        result.payload.user?.user_type ||
-        (localStorage.getItem("user")
-          ? JSON.parse(localStorage.getItem("user")).user_type
-          : null);
+      const userData = result.payload.user;
+      const userType = userData?.user_type || "seeker";
+
       if (userType === "seeker") {
+        // Set user in AuthContext for cross-tab sync and role checking
+        setUser({
+          ...userData,
+          user_type: "seeker",
+          email: userData?.email || email,
+        });
         navigate("/careseekers/dashboard/home");
       } else {
         try {
@@ -34,7 +40,7 @@ function LoginPage(handleBack) {
           localStorage.removeItem("user");
         }
         setError(
-          "You are not a care seeker — please login through the Care Seeker portal"
+          "You are not a care seeker — please login through the Care Provider portal"
         );
       }
     } else {
