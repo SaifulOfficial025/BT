@@ -86,8 +86,6 @@ function HouseKeepingTimeDetails({
                   type="date"
                   className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                   style={{ backgroundColor: "#fff", color: "#222" }}
-                  value={formData.endDate}
-                  onChange={(e) => updateFormData("endDate", e.target.value)}
                 />
               </div>
             </div>
@@ -260,10 +258,10 @@ function HouseKeepingTimeDetails({
             startTime: formData.startTime,
             endTime: formData.endTime,
             priceMin: formData.hourlyRateStart
-              ? (formData.hourlyRateStart / 10).toString()
+              ? Number(formData.hourlyRateStart).toFixed(2)
               : "35.00",
             priceMax: formData.hourlyRateEnd
-              ? (formData.hourlyRateEnd / 10).toString()
+              ? Number(formData.hourlyRateEnd).toFixed(2)
               : "55.00",
           };
 

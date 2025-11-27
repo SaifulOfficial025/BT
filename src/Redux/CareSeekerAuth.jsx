@@ -90,19 +90,31 @@ const initialState = readLS();
 
 // Helper to build API payload from current steps
 export const buildPayloadFromSteps = (steps) => {
-  // Convert day names to short format (M, T, W, T, F, S, S)
-  const dayMapping = {
-    Sunday: "S",
-    Monday: "M",
-    Tuesday: "T",
-    Wednesday: "W",
-    Thursday: "T",
-    Friday: "F",
-    Saturday: "S",
-  };
+  // Ensure payload uses full weekday names. The UI may store either full
+  // names ("Monday") or short symbols ("M", "T", "W", ...). Normalize
+  // both to full names for the API payload.
+  const fullNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const shortSymbols = ["S", "M", "T", "W", "T", "F", "S"];
   const repeat_on = (
     steps.timeDetails?.repeatDays || ["Monday", "Wednesday", "Friday"]
-  ).map((day) => dayMapping[day] || day);
+  ).map((day) => {
+    if (!day) return day;
+    // If already a full name, keep it
+    if (fullNames.includes(day)) return day;
+    // If it's a short symbol, map to the first matching full name by index
+    const idx = shortSymbols.indexOf(day);
+    if (idx !== -1) return fullNames[idx];
+    // Fallback: return as-is
+    return day;
+  });
 
   const payload = {
     service_category: steps.careCategory?.toLowerCase() || "childcare",

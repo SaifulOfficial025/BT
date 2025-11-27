@@ -27,11 +27,16 @@ function ChildTimeDetails({
         >
           ←
         </button>
-        <h3 className="text-base lg:text-lg text-gray-700 flex-1">Time/Date details</h3>
+        <h3 className="text-base lg:text-lg text-gray-700 flex-1">
+          Time/Date details
+        </h3>
         <span className="text-base lg:text-lg text-[#0093d1] font-bold">
           Step {currentStep}
         </span>{" "}
-        <span className="ml-2 text-base lg:text-lg text-gray-500"> of {totalSteps}</span>
+        <span className="ml-2 text-base lg:text-lg text-gray-500">
+          {" "}
+          of {totalSteps}
+        </span>
       </div>
 
       <div className="mb-6">
@@ -361,14 +366,36 @@ function ChildTimeDetails({
             endDate: formData.endDate,
             repeatEvery: formData.repeatEvery,
             repeatFrequency: formData.repeatFrequency,
-            repeatDays: formData.repeatDays,
+            // Ensure payload contains full weekday names even if the
+            // UI stores short symbols like "S", "M", "T" etc.
+            repeatDays: (() => {
+              const shortSymbols = ["S", "M", "T", "W", "T", "F", "S"];
+              const fullNames = [
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+              ];
+              // formData.repeatDays may contain either full names or the
+              // short symbols; include the corresponding full names in
+              // the payload based on either possibility, using index to
+              // disambiguate duplicate letters (S/T appear twice).
+              return fullNames.filter(
+                (name, idx) =>
+                  formData.repeatDays?.includes(name) ||
+                  formData.repeatDays?.includes(shortSymbols[idx])
+              );
+            })(),
             startTime: formData.startTime,
             endTime: formData.endTime,
             priceMin: formData.hourlyRateStart
-              ? (formData.hourlyRateStart / 10).toString()
+              ? Number(formData.hourlyRateStart).toFixed(2)
               : "35.00",
             priceMax: formData.hourlyRateEnd
-              ? (formData.hourlyRateEnd / 10).toString()
+              ? Number(formData.hourlyRateEnd).toFixed(2)
               : "55.00",
           };
 

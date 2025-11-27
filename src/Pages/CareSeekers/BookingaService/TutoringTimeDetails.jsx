@@ -260,10 +260,10 @@ function TutoringTimeDetails({
             startTime: formData.startTime,
             endTime: formData.endTime,
             priceMin: formData.hourlyRateStart
-              ? (formData.hourlyRateStart / 10).toString()
+              ? Number(formData.hourlyRateStart).toFixed(2)
               : "35.00",
             priceMax: formData.hourlyRateEnd
-              ? (formData.hourlyRateEnd / 10).toString()
+              ? Number(formData.hourlyRateEnd).toFixed(2)
               : "55.00",
           };
 

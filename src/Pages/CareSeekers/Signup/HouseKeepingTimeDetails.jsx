@@ -27,11 +27,16 @@ function HouseKeepingTimeDetails({
         >
           ←
         </button>
-        <h3 className="text-base lg:text-lg text-gray-700 flex-1">Time/Date details</h3>
+        <h3 className="text-base lg:text-lg text-gray-700 flex-1">
+          Time/Date details
+        </h3>
         <span className="text-base lg:text-lg text-[#0093d1] font-bold">
           Step {currentStep}
         </span>{" "}
-        <span className="ml-2 text-base lg:text-lg text-gray-500"> of {totalSteps}</span>
+        <span className="ml-2 text-base lg:text-lg text-gray-500">
+          {" "}
+          of {totalSteps}
+        </span>
       </div>
 
       <div className="mb-6">
@@ -357,14 +362,31 @@ function HouseKeepingTimeDetails({
             endDate: formData.endDate,
             repeatEvery: formData.repeatEvery,
             repeatFrequency: formData.repeatFrequency,
-            repeatDays: formData.repeatDays,
+            // Normalize repeatDays to full weekday names for payload
+            repeatDays: (() => {
+              const fullNames = [
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+              ];
+              const shortSymbols = ["S", "M", "T", "W", "T", "F", "S"];
+              return (formData.repeatDays || []).map((d) => {
+                if (fullNames.includes(d)) return d;
+                const idx = shortSymbols.indexOf(d);
+                return idx !== -1 ? fullNames[idx] : d;
+              });
+            })(),
             startTime: formData.startTime,
             endTime: formData.endTime,
             priceMin: formData.hourlyRateStart
-              ? (formData.hourlyRateStart / 10).toString()
+              ? Number(formData.hourlyRateStart).toFixed(2)
               : "35.00",
             priceMax: formData.hourlyRateEnd
-              ? (formData.hourlyRateEnd / 10).toString()
+              ? Number(formData.hourlyRateEnd).toFixed(2)
               : "55.00",
           };
 
