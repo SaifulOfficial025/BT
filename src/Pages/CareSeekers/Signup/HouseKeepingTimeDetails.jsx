@@ -359,27 +359,35 @@ function HouseKeepingTimeDetails({
           const timeDetailsData = {
             scheduleType: formData.scheduleType,
             startDate: formData.startDate,
-            endDate: formData.endDate,
-            repeatEvery: formData.repeatEvery,
-            repeatFrequency: formData.repeatFrequency,
+            endDate:
+              formData.scheduleType === "One-Off" ? null : formData.endDate,
+            repeatEvery:
+              formData.scheduleType === "One-Off" ? "" : formData.repeatEvery,
+            repeatFrequency:
+              formData.scheduleType === "One-Off"
+                ? ""
+                : formData.repeatFrequency,
             // Normalize repeatDays to full weekday names for payload
-            repeatDays: (() => {
-              const fullNames = [
-                "Sunday",
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday",
-              ];
-              const shortSymbols = ["S", "M", "T", "W", "T", "F", "S"];
-              return (formData.repeatDays || []).map((d) => {
-                if (fullNames.includes(d)) return d;
-                const idx = shortSymbols.indexOf(d);
-                return idx !== -1 ? fullNames[idx] : d;
-              });
-            })(),
+            repeatDays:
+              formData.scheduleType === "One-Off"
+                ? []
+                : (() => {
+                    const fullNames = [
+                      "Sunday",
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday",
+                      "Saturday",
+                    ];
+                    const shortSymbols = ["S", "M", "T", "W", "T", "F", "S"];
+                    return (formData.repeatDays || []).map((d) => {
+                      if (fullNames.includes(d)) return d;
+                      const idx = shortSymbols.indexOf(d);
+                      return idx !== -1 ? fullNames[idx] : d;
+                    });
+                  })(),
             startTime: formData.startTime,
             endTime: formData.endTime,
             priceMin: formData.hourlyRateStart

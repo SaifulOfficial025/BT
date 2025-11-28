@@ -116,34 +116,38 @@ export const buildPayloadFromSteps = (steps) => {
     return day;
   });
 
+  const service_category = steps.careCategory?.toLowerCase() || "childcare";
+  const location_information = {
+    use_current_location: steps.location?.useCurrentLocation || false,
+    preferred_language: steps.location?.preferredLanguage || "English",
+    country: steps.location?.country || "",
+    state: steps.location?.state || "",
+    city: steps.location?.city || "",
+    zip_code: steps.location?.zipCode || "",
+    nationality: steps.location?.nationality || "",
+  };
+
+  const isOneOff = steps.timeDetails?.scheduleType?.toLowerCase() === "one-off";
+
+  const schedule = {
+    job_type: isOneOff ? "one-time" : "recurring",
+    start_date: steps.timeDetails?.startDate || "2025-11-10",
+    end_date: isOneOff ? null : steps.timeDetails?.endDate || "2026-02-10",
+    repeat_every: isOneOff
+      ? {}
+      : {
+          count: parseInt(steps.timeDetails?.repeatEvery || "1"),
+          period: steps.timeDetails?.repeatFrequency || "Weekly",
+        },
+    repeat_on: isOneOff ? [] : repeat_on,
+    start_time: steps.timeDetails?.startTime || "09:00:00",
+    end_time: steps.timeDetails?.endTime || "17:00:00",
+  };
+
   const payload = {
-    service_category: steps.careCategory?.toLowerCase() || "childcare",
-    details: {
-      location_information: {
-        use_current_location: steps.location?.useCurrentLocation || false,
-        preferred_language: steps.location?.preferredLanguage || "English",
-        country: steps.location?.country || "",
-        state: steps.location?.state || "",
-        city: steps.location?.city || "",
-        zip_code: steps.location?.zipCode || "",
-        nationality: steps.location?.nationality || "",
-      },
-    },
-    schedule: {
-      job_type:
-        steps.timeDetails?.scheduleType?.toLowerCase() === "one-off"
-          ? "one-time"
-          : "recurring",
-      start_date: steps.timeDetails?.startDate || "2025-11-10",
-      end_date: steps.timeDetails?.endDate || "2026-02-10",
-      repeat_every: {
-        count: parseInt(steps.timeDetails?.repeatEvery || "1"),
-        period: steps.timeDetails?.repeatFrequency || "Weekly",
-      },
-      repeat_on,
-      start_time: steps.timeDetails?.startTime || "09:00:00",
-      end_time: steps.timeDetails?.endTime || "17:00:00",
-    },
+    service_category,
+    details: { location_information },
+    schedule,
     budget: {
       price_min: steps.timeDetails?.priceMin || "35.00",
       price_max: steps.timeDetails?.priceMax || "55.00",

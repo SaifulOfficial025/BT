@@ -1,9 +1,13 @@
 import React from "react";
 import Girl from "../../../../public/girl.svg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { saveStep } from "../../../Redux/CareSeekerAuth";
-import { postJob } from "../../../Redux/BookaService";
+import {
+  registerAndPublish,
+  saveStep,
+  buildRegisterAndPublishPayload,
+} from "../../../Redux/CareSeekerAuth";
+import { useAuth } from "../../../Context/AuthContext";
 
 function CareProvidersNearYou() {
   const [showSubscribePopup, setShowSubscribePopup] = React.useState(false);
@@ -12,103 +16,85 @@ function CareProvidersNearYou() {
 
   const [showSignupPopup, setShowSignupPopup] = React.useState(true);
   const [signupForm, setSignupForm] = React.useState({
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
+
+  const isValidEmail = (value) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value || "");
+
+  const isStrongPassword = (pw) =>
+    pw && /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(pw);
 
   const readOnboarding = () => {
     try {
       const raw = localStorage.getItem("seeker_onboarding");
       return raw ? JSON.parse(raw) : { steps: {}, preview: null };
-    } catch {
+    } catch (e) {
+      void e;
       return { steps: {}, preview: null };
     }
   };
 
   const handleRegister = async () => {
-    const onboarding = readOnboarding();
-
-    // Build the complete job_data payload from collected steps
-    const job_data = {
-      service_category: (
-        onboarding.steps?.careCategory || "childcare"
-      ).toLowerCase(),
-      details: {
-        location_information: {
-          use_current_location:
-            onboarding.steps?.location?.useCurrentLocation || false,
-          preferred_language:
-            onboarding.steps?.location?.preferredLanguage || "English",
-          country: onboarding.steps?.location?.country || "",
-          state: onboarding.steps?.location?.state || "",
-          city: onboarding.steps?.location?.city || "",
-          zip_code: onboarding.steps?.location?.zipCode || "",
-          nationality: onboarding.steps?.location?.nationality || "",
-        },
-      },
-      schedule: {
-        job_type:
-          onboarding.steps?.timeDetails?.scheduleType?.toLowerCase() ===
-          "one-off"
-            ? "one-time"
-            : "recurring",
-        recurrence_pattern: {
-          frequency: (
-            onboarding.steps?.timeDetails?.repeatFrequency || "Weekly"
-          ).toLowerCase(),
-          days: onboarding.steps?.timeDetails?.repeatDays || ["Friday"],
-        },
-      },
-      budget: {
-        price_min: parseFloat(onboarding.steps?.timeDetails?.priceMin) || 25.0,
-        price_max: parseFloat(onboarding.steps?.timeDetails?.priceMax) || 35.0,
-      },
-      message_to_provider:
-        onboarding.steps?.summary?.messageToProvider ||
-        "We need someone reliable.",
-    };
-
-    // Add service-specific details for housekeeping as example
-    if (onboarding.steps?.careCategory === "Housekeeping") {
-      job_data.details.housekeeping_information = {
-        kind_of_housekeeping:
-          onboarding.steps?.housekeeping?.housekeepingServices || [],
-        size_of_your_house: onboarding.steps?.housekeeping?.homeSize || "",
-        number_of_bedrooms:
-          onboarding.steps?.housekeeping?.numberOfBedrooms || "",
-        number_of_bathrooms:
-          onboarding.steps?.housekeeping?.numberOfBathrooms || "",
-        number_of_toilets:
-          onboarding.steps?.housekeeping?.numberOfToilets || "",
-        pets_present: onboarding.steps?.housekeeping?.petsPresent || "No",
-        specify_pet_present: onboarding.steps?.housekeeping?.petDetails || "",
-        additional_care: onboarding.steps?.housekeeping?.additionalCare || [],
-      };
+    if (
+      !signupForm.email ||
+      !signupForm.password ||
+      signupForm.password !== signupForm.confirmPassword ||
+      !signupForm.firstName ||
+      !signupForm.lastName
+    ) {
+      alert(
+        "Please provide first name, last name, valid email and matching passwords"
+      );
+      return;
     }
 
-    const payload = {
-      job_data: job_data,
-      title: onboarding.preview?.title || "",
-      summary: onboarding.preview?.summary || "",
-      skills_and_expertise: onboarding.preview?.skills || [],
+    const onboarding = readOnboarding();
+
+    const userCredentials = {
+      firstName: signupForm.firstName,
+      lastName: signupForm.lastName,
+      email: signupForm.email,
+      password: signupForm.password,
     };
 
+    const payload = buildRegisterAndPublishPayload(
+      onboarding.steps,
+      userCredentials
+    );
+
     try {
-      const resAction = await dispatch(postJob(payload));
+      const resAction = await dispatch(registerAndPublish(payload));
       if (resAction.error) {
         alert(
-          "Publish failed: " +
-            JSON.stringify(resAction.payload || resAction.error)
+          "Registration failed: " +
+            (resAction.payload || resAction.error.message)
         );
       } else {
-        alert("Success: " + JSON.stringify(resAction.payload));
-        dispatch(saveStep({ stepName: "published", data: resAction.payload }));
+        // Save registration result and redirect to login
+        dispatch(saveStep({ stepName: "registered", data: resAction.payload }));
+
+        // Set user in AuthContext
+        if (resAction.payload?.user) {
+          setUser({
+            ...resAction.payload.user,
+            user_type: "seeker",
+            email: signupForm.email,
+          });
+        }
+
         setShowPaymentPopup(false);
         setShowSubscribePopup(false);
         setShowSignupPopup(false);
+        navigate("/careseekers/dashboard/home");
       }
     } catch (e) {
       alert("Unexpected error: " + e.message);
@@ -125,8 +111,8 @@ function CareProvidersNearYou() {
     <>
       {/* Signup Blur Overlay */}
       {showSignupPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 font-sfpro">
-          <div className="bg-white rounded-2xl shadow-xl w-[400px] max-w-full p-8 dark:bg-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4 font-sfpro">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[400px] p-8 dark:bg-white">
             <img
               src={Girl}
               alt="Signup Illustration"
@@ -136,9 +122,28 @@ function CareProvidersNearYou() {
               Sign Up to View Care Providers near you
             </h2>
             <p className="text-sm text-gray-500 text-center mb-6">
-              Kindly enter your email address below to view care providers near
-              you.
+              Kindly enter your details below to view care providers near you.
             </p>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <input
+                type="text"
+                placeholder="First Name"
+                value={signupForm.firstName}
+                onChange={(e) =>
+                  setSignupForm({ ...signupForm, firstName: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400"
+              />
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={signupForm.lastName}
+                onChange={(e) =>
+                  setSignupForm({ ...signupForm, lastName: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400"
+              />
+            </div>
             <input
               type="email"
               placeholder="Email"
@@ -157,6 +162,11 @@ function CareProvidersNearYou() {
               }
               className="w-full mb-3 p-3 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400"
             />
+            {!isStrongPassword(signupForm.password) && signupForm.password && (
+              <p className="text-sm text-red-500 mb-2">
+                Password must be at least 8 characters and include a number.
+              </p>
+            )}
             <input
               type="password"
               placeholder="Confirm Password"
@@ -169,12 +179,30 @@ function CareProvidersNearYou() {
               }
               className="w-full mb-6 p-3 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400"
             />
+            {signupForm.confirmPassword &&
+              signupForm.password !== signupForm.confirmPassword && (
+                <p className="text-sm text-red-500 mb-2">
+                  Passwords do not match.
+                </p>
+              )}
             <button
-              className="w-full bg-[#0093d1] text-white py-3 rounded-md font-semibold hover:bg-[#007bb0] transition"
+              className="w-full bg-[#0093d1] text-white py-3 rounded-md font-semibold hover:bg-[#007bb0] transition disabled:opacity-60"
               onClick={handleRegister}
+              disabled={
+                !signupForm.firstName ||
+                !signupForm.lastName ||
+                !isValidEmail(signupForm.email) ||
+                !isStrongPassword(signupForm.password) ||
+                signupForm.password !== signupForm.confirmPassword
+              }
             >
               Sign Up
             </button>
+            {!isValidEmail(signupForm.email) && signupForm.email && (
+              <p className="text-sm text-red-500 mt-2">
+                Please enter a valid email address.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -188,19 +216,24 @@ function CareProvidersNearYou() {
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center px-8 pt-8">
-          <h2 className="text-3xl font-semibold text-gray-800">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center px-4 lg:px-8 pt-6 lg:pt-8 gap-3 lg:gap-0">
+          <h2 className="text-2xl lg:text-3xl font-semibold text-gray-800">
             Care Providers near you
           </h2>
           <div className="flex items-center">
-            <span className="text-lg text-[#0093d1] font-bold">Step 8</span>
-            <span className="ml-2 text-lg text-gray-500"> of 8</span>
+            <span className="text-base lg:text-lg text-[#0093d1] font-bold">
+              Step 8
+            </span>
+            <span className="ml-2 text-base lg:text-lg text-gray-500">
+              {" "}
+              of 8
+            </span>
           </div>
         </div>
 
         {/* Cards Grid */}
-        <div className="px-8 pb-8">
-          <div className="grid grid-cols-2 gap-6 mt-8">
+        <div className="px-4 lg:px-8 pb-6 lg:pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mt-6 lg:mt-8">
             {[1, 2, 3, 4, 5, 6].map((provider) => (
               <div
                 key={provider}
@@ -211,20 +244,20 @@ function CareProvidersNearYou() {
                   <img
                     src="https://randomuser.me/api/portraits/women/1.jpg"
                     alt="Provider"
-                    className="w-14 h-14 rounded-full mr-4 object-cover"
+                    className="w-12 h-12 lg:w-14 lg:h-14 rounded-full mr-3 lg:mr-4 object-cover flex-shrink-0"
                   />
-                  <div>
-                    <h4 className="font-semibold text-gray-800 text-lg">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-semibold text-gray-800 text-base lg:text-lg truncate">
                       Aleem Sarah
                     </h4>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs lg:text-sm text-gray-500 truncate">
                       Old Dallas, Salford, UK
                     </p>
                   </div>
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-gray-500 mb-4 leading-snug">
+                <p className="text-xs lg:text-sm text-gray-500 mb-4 leading-snug">
                   5 years of experience with extensive ways of managing daily
                   routines for multiple children. Skilled in age-appropriate
                   activities, behavioural guidance.
@@ -254,14 +287,14 @@ function CareProvidersNearYou() {
                 </div>
 
                 {/* Buttons */}
-                <div className="flex space-x-2">
+                <div className="flex flex-col lg:flex-row gap-2 lg:space-x-2 lg:gap-0">
                   <button
-                    className="flex-1 bg-[#0093d1] text-white py-2 rounded-md font-medium hover:bg-[#007bb0] transition"
+                    className="w-full lg:flex-1 bg-[#0093d1] text-white py-2 lg:py-2 rounded-md font-medium hover:bg-[#007bb0] transition text-sm lg:text-base"
                     onClick={() => setShowSubscribePopup(true)}
                   >
                     Interested
                   </button>
-                  <button className="flex-1 border border-[#0093d1] text-[#0093d1] py-2 rounded-md font-medium hover:bg-[#f0fbf9] transition">
+                  <button className="w-full lg:flex-1 border border-[#0093d1] text-[#0093d1] py-2 lg:py-2 rounded-md font-medium hover:bg-[#f0fbf9] transition text-sm lg:text-base">
                     Not Interested
                   </button>
                 </div>
@@ -273,8 +306,8 @@ function CareProvidersNearYou() {
 
       {/* Subscribe Popup */}
       {showSubscribePopup && !showPaymentPopup && (
-        <div className="font-sfpro fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-xl w-[400px] max-w-full relative flex flex-col items-center p-8">
+        <div className="font-sfpro fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[400px] relative flex flex-col items-center p-6 lg:p-8">
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl font-bold z-10"
               onClick={() => setShowSubscribePopup(false)}
@@ -353,8 +386,8 @@ function CareProvidersNearYou() {
 
       {/* Payment Popup */}
       {showPaymentPopup && (
-        <div className="font-sfpro fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-xl w-[400px] max-w-full relative flex flex-col items-center p-8">
+        <div className="font-sfpro fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[400px] relative flex flex-col items-center p-8">
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl font-bold z-10"
               onClick={() => {

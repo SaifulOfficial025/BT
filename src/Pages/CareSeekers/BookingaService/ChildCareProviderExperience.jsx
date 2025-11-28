@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { saveStep } from "../../../Redux/CareSeekerAuth";
 
@@ -10,8 +10,9 @@ function ChildCareProviderExperience({
   totalSteps = 5,
 }) {
   const dispatch = useDispatch();
+  const [errors, setErrors] = useState({});
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg border border-gray-100 font-sfpro">
+    <div className="w-full max-w-3xl mx-auto bg-white p-4 lg:p-8 rounded-2xl shadow-lg border border-gray-100 font-sfpro">
       <div className="flex items-center mb-6">
         <button
           onClick={() => window.history.back()}
@@ -19,13 +20,16 @@ function ChildCareProviderExperience({
         >
           ←
         </button>
-        <h3 className="text-lg text-gray-700 flex-1">
+        <h3 className="text-base lg:text-lg text-gray-700 flex-1">
           Care provider Experience
         </h3>
-        <span className="text-lg text-[#0093d1] font-bold">
+        <span className="text-base lg:text-lg text-[#0093d1] font-bold">
           Step {currentStep}
         </span>{" "}
-        <span className="ml-2 text-lg text-gray-500"> of {totalSteps}</span>
+        <span className="ml-2 text-base lg:text-lg text-gray-500">
+          {" "}
+          of {totalSteps}
+        </span>
       </div>
       <div className="mb-6">
         <h4 className="text-base font-medium text-gray-800 mb-2">Details</h4>
@@ -38,7 +42,8 @@ function ChildCareProviderExperience({
         <div>
           <p className="text-sm text-gray-700 mb-4">
             Communication & Language{" "}
-            <span className="font-normal">Select care giver preference.</span>
+            <span className="font-normal">Select care giver preference.</span>{" "}
+            <span className="text-red-600">*</span>
           </p>
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="relative">
@@ -111,6 +116,11 @@ function ChildCareProviderExperience({
                     ))}
                   </ul>
                 )}
+              {errors.communicationLanguage && (
+                <p className="text-sm text-red-600 mt-2">
+                  {errors.communicationLanguage}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -185,14 +195,14 @@ function ChildCareProviderExperience({
                 </div>
               )}
               {!formData.showPreferenceDropdown &&
-                Array.isArray(formData.specialPreferences) &&
-                formData.specialPreferences.length > 0 && (
+                formData.specialPreferences?.length > 0 && (
                   <ul className="mt-2 list-disc pl-5 text-sm text-gray-700">
                     {formData.specialPreferences.map((preference) => (
                       <li key={preference}>{preference}</li>
                     ))}
                   </ul>
                 )}
+              {/* specialPreferences is optional - no error shown */}
             </div>
           </div>
         </div>
@@ -200,7 +210,8 @@ function ChildCareProviderExperience({
         <div>
           <p className="text-sm text-gray-700 mb-4">
             Preferred Option{" "}
-            <span className="font-normal">Select care giver preference.</span>
+            <span className="font-normal">Select care giver preference.</span>{" "}
+            <span className="text-red-600">*</span>
           </p>
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="relative">
@@ -256,6 +267,11 @@ function ChildCareProviderExperience({
                     ))}
                   </ul>
                 )}
+              {errors.preferredOption && (
+                <p className="text-sm text-red-600 mt-2">
+                  {errors.preferredOption}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -333,6 +349,7 @@ function ChildCareProviderExperience({
                     ))}
                   </ul>
                 )}
+              {/* extraCareCategory is optional - no error shown */}
             </div>
           </div>
         </div>
@@ -340,6 +357,22 @@ function ChildCareProviderExperience({
 
       <button
         onClick={() => {
+          const newErrors = {};
+          if (
+            !formData.communicationLanguage ||
+            formData.communicationLanguage.length === 0
+          )
+            newErrors.communicationLanguage =
+              "Please select at least one communication language.";
+          if (
+            !formData.preferredOption ||
+            formData.preferredOption.length === 0
+          )
+            newErrors.preferredOption = "Please select a preferred option.";
+
+          setErrors(newErrors);
+          if (Object.keys(newErrors).length > 0) return;
+
           // Save experience data to Redux before moving next
           dispatch(
             saveStep({
@@ -354,7 +387,7 @@ function ChildCareProviderExperience({
           );
           handleNext();
         }}
-        className="w-full bg-[#0093d1] text-white text-lg font-medium py-3 rounded-md hover:bg-[#007bb0] transition mt-8"
+        className="w-full bg-[#0093d1] text-white text-base lg:text-lg font-medium py-3 rounded-md hover:bg-[#007bb0] transition mt-8"
       >
         Next
       </button>

@@ -495,7 +495,7 @@ function ChildInformation({
   return (
     <>
       {showLocationPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4 font-sfpro p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 font-sfpro p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-[400px] relative flex flex-col">
             {/* Close Button */}
             <button
@@ -621,6 +621,8 @@ function ChildInformation({
             <input
               type="text"
               placeholder="First name"
+              required
+              aria-required="true"
               className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
               value={formData.firstName || ""}
               onChange={(e) => updateFormData("firstName", e.target.value)}
@@ -633,6 +635,8 @@ function ChildInformation({
             <input
               type="text"
               placeholder="Last name"
+              required
+              aria-required="true"
               className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
               value={formData.lastName || ""}
               onChange={(e) => updateFormData("lastName", e.target.value)}
@@ -663,6 +667,8 @@ function ChildInformation({
               <select
                 className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                 value={formData.preferredLanguage}
+                required
+                aria-required="true"
                 onChange={(e) =>
                   updateFormData("preferredLanguage", e.target.value)
                 }
@@ -682,6 +688,8 @@ function ChildInformation({
               <select
                 className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                 value={formData.country}
+                required
+                aria-required="true"
                 onChange={(e) => updateFormData("country", e.target.value)}
               >
                 <option value="">Select country</option>
@@ -702,6 +710,8 @@ function ChildInformation({
               <select
                 className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                 value={formData.state}
+                required
+                aria-required="true"
                 onChange={(e) => updateFormData("state", e.target.value)}
               >
                 <option value="">Select state</option>
@@ -719,6 +729,8 @@ function ChildInformation({
               <input
                 type="text"
                 placeholder="Input city"
+                required
+                aria-required="true"
                 className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                 value={formData.city}
                 onChange={(e) => updateFormData("city", e.target.value)}
@@ -734,6 +746,8 @@ function ChildInformation({
               <input
                 type="text"
                 placeholder="Input zip code"
+                required
+                aria-required="true"
                 className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                 value={formData.zipCode}
                 onChange={(e) => updateFormData("zipCode", e.target.value)}
@@ -746,6 +760,8 @@ function ChildInformation({
               <input
                 type="text"
                 placeholder="Input nationality"
+                required
+                aria-required="true"
                 className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                 value={formData.nationality}
                 onChange={(e) => updateFormData("nationality", e.target.value)}
@@ -769,6 +785,8 @@ function ChildInformation({
                 <select
                   className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                   value={formData.childcareType}
+                  required
+                  aria-required="true"
                   onChange={(e) =>
                     updateFormData("childcareType", e.target.value)
                   }
@@ -786,6 +804,8 @@ function ChildInformation({
                 <select
                   className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                   value={formData.numberOfChildren || formData.childCount || ""}
+                  required
+                  aria-required="true"
                   onChange={(e) => {
                     updateFormData("numberOfChildren", e.target.value);
                     updateFormData("childCount", e.target.value); // backward compatibility
@@ -815,6 +835,8 @@ function ChildInformation({
                       <input
                         type="date"
                         placeholder="DD-MM-YYYY"
+                        required
+                        aria-required="true"
                         className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                         value={formData.childrenDetails?.[index]?.age || ""}
                         onChange={(e) =>
@@ -844,6 +866,8 @@ function ChildInformation({
                       <select
                         className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                         value={formData.childrenDetails?.[index]?.gender || ""}
+                        required
+                        aria-required="true"
                         onChange={(e) =>
                           updateChildDetail(index, "gender", e.target.value)
                         }

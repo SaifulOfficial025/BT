@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
 import {
   saveStep,
   generatePreview,
@@ -16,8 +17,9 @@ function TutoringTimeDetails({
 }) {
   const dispatch = useDispatch();
   const onboardingSteps = useSelector((state) => state.careSeeker.steps);
+  const [errors, setErrors] = useState({});
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg border border-gray-100 font-sfpro">
+    <div className="w-full max-w-3xl mx-auto bg-white p-4 lg:p-8 rounded-2xl shadow-lg border border-gray-100 font-sfpro">
       <div className="flex items-center mb-6">
         <button
           onClick={handleBack}
@@ -25,11 +27,16 @@ function TutoringTimeDetails({
         >
           ←
         </button>
-        <h3 className="text-lg text-gray-700 flex-1">Time/Date details</h3>
-        <span className="text-lg text-[#0093d1] font-bold">
+        <h3 className="text-base lg:text-lg text-gray-700 flex-1">
+          Time/Date details
+        </h3>
+        <span className="text-base lg:text-lg text-[#0093d1] font-bold">
           Step {currentStep}
         </span>{" "}
-        <span className="ml-2 text-lg text-gray-500"> of {totalSteps}</span>
+        <span className="ml-2 text-base lg:text-lg text-gray-500">
+          {" "}
+          of {totalSteps}
+        </span>
       </div>
 
       <div className="mb-6">
@@ -65,40 +72,70 @@ function TutoringTimeDetails({
 
         {formData.scheduleType === "Reoccurring" && (
           <>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Date
+                  Start Date <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="date"
+                  required
+                  aria-required="true"
+                  onFocus={(e) => {
+                    try {
+                      if (e.target && e.target.showPicker)
+                        e.target.showPicker();
+                    } catch (e) {
+                      void e;
+                    }
+                  }}
                   className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                   style={{ backgroundColor: "#fff", color: "#222" }}
                   value={formData.startDate}
                   onChange={(e) => updateFormData("startDate", e.target.value)}
                 />
+                {errors.startDate && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {errors.startDate}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  End Date
+                  End Date <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="date"
+                  required
+                  aria-required="true"
+                  onFocus={(e) => {
+                    try {
+                      if (e.target && e.target.showPicker)
+                        e.target.showPicker();
+                    } catch (e) {
+                      void e;
+                    }
+                  }}
                   className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                   style={{ backgroundColor: "#fff", color: "#222" }}
                   value={formData.endDate}
                   onChange={(e) => updateFormData("endDate", e.target.value)}
                 />
+                {errors.endDate && (
+                  <p className="text-sm text-red-600 mt-1">{errors.endDate}</p>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Repeat every
+                  Repeat every <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="text"
+                  required
+                  aria-required="true"
                   placeholder="Specify No.of times"
                   className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
                   style={{ backgroundColor: "#fff", color: "#222" }}
@@ -107,6 +144,11 @@ function TutoringTimeDetails({
                     updateFormData("repeatEvery", e.target.value)
                   }
                 />
+                {errors.repeatEvery && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {errors.repeatEvery}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -115,22 +157,30 @@ function TutoringTimeDetails({
                 </label>
                 <select
                   className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
+                  required
+                  aria-required="true"
                   style={{ backgroundColor: "#fff", color: "#222" }}
                   value={formData.repeatFrequency}
                   onChange={(e) =>
                     updateFormData("repeatFrequency", e.target.value)
                   }
                 >
+                  <option value="">Select frequency</option>
                   <option>Weekly</option>
                   <option>Monthly</option>
                   <option>Daily</option>
                 </select>
+                {errors.repeatFrequency && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {errors.repeatFrequency}
+                  </p>
+                )}
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-4">
-                Repeat
+                Repeat <span className="text-red-600">*</span>
               </label>
               <div className="flex justify-between max-w-full w-full">
                 {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
@@ -178,6 +228,9 @@ function TutoringTimeDetails({
                   </button>
                 ))}
               </div>
+              {errors.repeatDays && (
+                <p className="text-sm text-red-600 mt-1">{errors.repeatDays}</p>
+              )}
             </div>
           </>
         )}
@@ -185,42 +238,64 @@ function TutoringTimeDetails({
         {formData.scheduleType === "One-Off" && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Start Date
+              Start Date <span className="text-red-600">*</span>
             </label>
             <input
               type="date"
+              required
+              aria-required="true"
+              onFocus={(e) => {
+                try {
+                  if (e.target && e.target.showPicker) e.target.showPicker();
+                } catch (e) {
+                  void e;
+                }
+              }}
               className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
               style={{ backgroundColor: "#fff", color: "#222" }}
               value={formData.startDate}
               onChange={(e) => updateFormData("startDate", e.target.value)}
             />
+            {errors.startDate && (
+              <p className="text-sm text-red-600 mt-1">{errors.startDate}</p>
+            )}
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Start Time
+              Start Time <span className="text-red-600">*</span>
             </label>
             <input
               type="time"
+              required
+              aria-required="true"
               className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
               style={{ backgroundColor: "#fff", color: "#222" }}
               value={formData.startTime}
               onChange={(e) => updateFormData("startTime", e.target.value)}
             />
+            {errors.startTime && (
+              <p className="text-sm text-red-600 mt-1">{errors.startTime}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              End Time
+              End Time <span className="text-red-600">*</span>
             </label>
             <input
               type="time"
+              required
+              aria-required="true"
               className="w-full p-3 border border-gray-300 rounded-md bg-white text-gray-900"
               style={{ backgroundColor: "#fff", color: "#222" }}
               value={formData.endTime}
               onChange={(e) => updateFormData("endTime", e.target.value)}
             />
+            {errors.endTime && (
+              <p className="text-sm text-red-600 mt-1">{errors.endTime}</p>
+            )}
           </div>
         </div>
 
@@ -245,18 +320,72 @@ function TutoringTimeDetails({
                 updateFormData("hourlyRateEnd", v.hourlyRateEnd);
             }}
           />
+          {errors.hourlyRate && (
+            <p className="text-sm text-red-600 mt-1">{errors.hourlyRate}</p>
+          )}
         </div>
       </div>
 
       <button
         onClick={async () => {
+          const newErrors = {};
+          if (!formData.startTime)
+            newErrors.startTime = "Start time is required.";
+          if (!formData.endTime) newErrors.endTime = "End time is required.";
+          if (!formData.hourlyRateStart || !formData.hourlyRateEnd)
+            newErrors.hourlyRate = "Please set an hourly rate range.";
+
+          if (formData.scheduleType === "Reoccurring") {
+            if (!formData.startDate)
+              newErrors.startDate = "Start date is required.";
+            if (!formData.endDate) newErrors.endDate = "End date is required.";
+            if (!formData.repeatEvery)
+              newErrors.repeatEvery = "Repeat every is required.";
+            if (!formData.repeatFrequency)
+              newErrors.repeatFrequency = "Repeat frequency is required.";
+            if (!formData.repeatDays || formData.repeatDays.length === 0)
+              newErrors.repeatDays = "Select at least one day to repeat.";
+          } else {
+            // One-Off
+            if (!formData.startDate)
+              newErrors.startDate = "Start date is required.";
+          }
+
+          setErrors(newErrors);
+          if (Object.keys(newErrors).length > 0) return;
+
           const timeDetailsData = {
             scheduleType: formData.scheduleType,
             startDate: formData.startDate,
-            endDate: formData.endDate,
-            repeatEvery: formData.repeatEvery,
-            repeatFrequency: formData.repeatFrequency,
-            repeatDays: formData.repeatDays,
+            endDate:
+              formData.scheduleType === "One-Off" ? null : formData.endDate,
+            repeatEvery:
+              formData.scheduleType === "One-Off" ? "" : formData.repeatEvery,
+            repeatFrequency:
+              formData.scheduleType === "One-Off"
+                ? ""
+                : formData.repeatFrequency,
+            // Normalize repeatDays to full weekday names for payload
+            repeatDays:
+              formData.scheduleType === "One-Off"
+                ? []
+                : (() => {
+                    const fullNames = [
+                      "Sunday",
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday",
+                      "Saturday",
+                    ];
+                    const shortSymbols = ["S", "M", "T", "W", "T", "F", "S"];
+                    return (formData.repeatDays || []).map((d) => {
+                      if (fullNames.includes(d)) return d;
+                      const idx = shortSymbols.indexOf(d);
+                      return idx !== -1 ? fullNames[idx] : d;
+                    });
+                  })(),
             startTime: formData.startTime,
             endTime: formData.endTime,
             priceMin: formData.hourlyRateStart
@@ -282,7 +411,7 @@ function TutoringTimeDetails({
 
           handleNext();
         }}
-        className="w-full bg-[#0093d1] text-white text-lg font-medium py-3 rounded-md hover:bg-[#007bb0] transition mt-8"
+        className="w-full bg-[#0093d1] text-white text-base lg:text-lg font-medium py-3 rounded-md hover:bg-[#007bb0] transition mt-8"
       >
         Next
       </button>
